@@ -17,6 +17,7 @@ import { StackNavigationProp } from '@react-navigation/stack'; // Added StackNav
 import { RootStackParamList } from '../navigation/types'; // Added RootStackParamList
 import { useWebSocketContext } from '../context/WebSocketContext'; // Import WebSocket context
 import { useTheme } from '../theme';
+import { Role } from '../types'; // Import Role type
 
 const ADMIN_PASSWORD = '12345678'; // Hardcoded for now, move to env or config
 
@@ -25,7 +26,7 @@ type Locale = 'en' | 'uk'; // Explicitly define Locale type
 const AdminScreen = () => {
   // Removed navigation prop, using useNavigation instead
   const { t, i18n } = useTranslation();
-  const { serverIP, locale, setServerIP, setLocale } = useAppContext();
+  const { serverIP, locale, role, setServerIP, setLocale, setRole } = useAppContext();
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'Admin'>>(); // Added navigation
   const { theme } = useTheme();
@@ -35,13 +36,15 @@ const AdminScreen = () => {
 
   const [inputServerIP, setInputServerIP] = useState(serverIP || '');
   const [selectedLocale, setSelectedLocale] = useState<Locale>(locale); // Use Locale type for state
+  const [selectedRole, setSelectedRole] = useState<Role>(role); // Use Role type for state
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [passwordAttempt, setPasswordAttempt] = useState('');
 
   useEffect(() => {
     setInputServerIP(serverIP || '');
     setSelectedLocale(locale);
-  }, [serverIP, locale]);
+    setSelectedRole(role);
+  }, [serverIP, locale, role]);
 
   const handleSave = () => {
     // Basic IP validation (very simple)
@@ -55,6 +58,7 @@ const AdminScreen = () => {
 
     setServerIP(inputServerIP);
     setLocale(selectedLocale);
+    setRole(selectedRole);
     i18n.changeLanguage(selectedLocale);
     Alert.alert(t('adminScreen.successTitle'), t('adminScreen.settingsSaved'));
     navigation.goBack(); // Or navigate to Default screen
@@ -229,6 +233,21 @@ const AdminScreen = () => {
           >
             <Picker.Item label="English" value="en" />
             <Picker.Item label="Українська" value="uk" />
+          </Picker>
+        </View>
+
+        <Text style={styles.label}>{t('role')}</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedRole}
+            onValueChange={(itemValue: Role, itemIndex: number) => {
+              setSelectedRole(itemValue);
+            }}
+            style={styles.picker}
+          >
+            <Picker.Item label={t('roles.editor')} value="editor" />
+            <Picker.Item label={t('roles.operator')} value="operator" />
+            <Picker.Item label={t('roles.general')} value="general" />
           </Picker>
         </View>
 

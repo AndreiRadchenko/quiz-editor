@@ -5,6 +5,12 @@
   "seatNumber": "Номер місця",
   "serverIP": "IP-адреса сервера",
   "language": "Мова",
+  "role": "Роль",
+  "roles": {
+    "editor": "Редактор",
+    "operator": "Режисер",
+    "general": "Продюсер"
+  },
   "defaultScreen": {
     "logoAlt": "Логотип 1% Клубу",
     "loadingPlayerData": "Завантаження даних гравця...",
@@ -34,8 +40,19 @@
     "tipButtonText": "?",
     "swipeInstructions": "Свайп ліворуч (ТАК) для додавання правильної відповіді.",
     "noIncorrectAnswers": "Немає неправильних відповідей для перегляду",
+    "playersTitle": "Гравці",
+    "loadingPlayers": "Завантаження гравців...",
+    "noPlayersFound": "Гравці не знайдені",
     "yes": "ТАК",
-    "no": "НІ"
+    "no": "НІ",
+    "countdownLabel": "Відлік:",
+    "prizePoolLabel": "Призовий фонд:",
+    "changeLabel": "Зміна:",
+    "remainingPlayersLabel": "Залишилося гравців:",
+    "eliminatedLabel": "Вибули:",
+    "correctAnswersLabel": "Правильні відповіді:",
+    "incorrectLabel": "Неправильні:",
+    "passesLabel": "Паси:"
   },
   "errors": {
     "playerDataError": "Помилка завантаження даних гравця.",

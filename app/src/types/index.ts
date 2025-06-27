@@ -1,8 +1,12 @@
+export type Role = 'editor' | 'operator' | 'general';
+
 export interface AppContextType {
   serverIP: string | null;
   locale: 'en' | 'uk';
+  role: Role;
   setServerIP: (ip: string | null) => void;
   setLocale: (locale: 'en' | 'uk') => void;
+  setRole: (role: Role) => void;
 }
 
 // WebSocket Broadcast States from Server
@@ -41,6 +45,13 @@ export interface iQuizSate {
   passes: number;
   ready: number;
   countdownDuration: number;
+  timerStatus: TimerStatus; // New field for timer status
+}
+export interface TimerStatus {
+  remainingTime: number | null;
+  initialDuration: number | null;
+  status: 'idle' | 'running' | 'stopped' | 'reset' | 'complete' | 'error';
+  tierId: string | null;
 }
 
 export interface iAnswerState {
@@ -62,6 +73,8 @@ export interface iAnswerState {
   pass: boolean;
 }
 
+export type PlayerType = 'active' | 'passed' | 'editor' | undefined;
+
 // Player Data (part of SeatDataType)
 export type PlayerDataType = {
   id: number;
@@ -78,13 +91,17 @@ export type PlayerDataType = {
   boughtOutEndGame: boolean;
   externalId: string;
   image: string; // Player's avatar/image filename
-  lives?: number; // Added for player lives
+  isAnswerCorrect?: boolean | null;
+  isAnswerPass?: boolean | null;
+  isAnswerBoughtOut?: boolean | null;
+  isPlayerReady?: boolean | null;
 };
 
 // Seat Data (from GET /seats/[seat])
 export type SeatDataType = {
   id: string;
   seat: number;
+  editorIndex: number;
   description: string;
   sector: string;
   cameras: string;
@@ -146,9 +163,3 @@ export interface iAnswerMessage {
   auto: boolean;
 }
 
-export interface TimerStatus {
-  remainingTime: number | null;
-  initialDuration: number | null;
-  status: 'idle' | 'running' | 'stopped' | 'reset' | 'complete' | 'error';
-  tierId: string | null;
-}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { iQuizSate, iCheckMessage, iAnswerState } from '../types';
 import { fetchQuizState } from '../api';
+import { queryClient } from '../store/queryClient';
 export type WebSocketStatus =
   | 'connecting'
   | 'connected'
@@ -77,8 +78,10 @@ export const useWebSocket = () => {
           const messageReceived = await JSON.parse(event.data as string);
           console.warn('WebSocket message:', messageReceived);
 
-          if (['TIMER', 'CHECK'].includes(messageReceived.event)) {
+          if (['ANSWER', 'CHECK'].includes(messageReceived.event)) {
             return; // Ignore timer messages
+          } else if (messageReceived.event === 'TIMER') {
+            setQuizState(prev => prev === null ? null : { ...prev, timerStatus: messageReceived.payload });
           } else if (
             [
               'QUESTION_PRE',
@@ -103,7 +106,7 @@ export const useWebSocket = () => {
               //   return; // Avoid unnecessary updates if state hasn't changed
               // }
               // updateQuizState(messageReceived.payload);
-              setQuizState(messageReceived.payload);
+              setQuizState(prev => ({ ...prev, ...messageReceived.payload }));
 
               // Handle specific messages for query invalidation
               switch (messageReceived.event) {
@@ -116,25 +119,7 @@ export const useWebSocket = () => {
           } else if (messageReceived.event === 'UPDATE_PLAYERS') {
             const updatedState = await fetchQuizState(serverIP);
             setQuizState(updatedState);
-          } else if (messageReceived.event === 'ANSWER') {
-            setAnswers(prevAnswers => {
-              // Check if the answer already exists to avoid duplicates
-              const existingAnswer = prevAnswers.find(
-                answer => answer.seat === messageReceived.payload.answer.seat
-              );
-              if (existingAnswer) {
-                console.warn(
-                  `Duplicate answer received for seat ${messageReceived.payload.answer.seat}, ignoring.`
-                );
-                return prevAnswers; // Return existing state without modification
-              }
-              console.log(
-                'New answer received:',
-                messageReceived.payload.answer
-              );
-              return [...prevAnswers, messageReceived.payload.answer];
-            });
-          } else {
+          }  else {
             console.warn(
               'WebSocket message format not recognized:',
               messageReceived

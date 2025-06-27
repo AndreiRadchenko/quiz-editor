@@ -26,8 +26,8 @@
         }
       ]
     ],
-    "name": "Quiz Supervisor",
-    "slug": "quizSupervisor",
+    "name": "Quiz Editor",
+    "slug": "quizEditor",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo-square-01.png",
@@ -76,7 +76,7 @@
           "backgroundColor": "#1a1a1a"
         }
       },
-      "package": "com.andriiradchenko.quizSupervisor",
+      "package": "com.andriiradchenko.quizEditor",
       "versionCode": 4,
       "enableProguardInReleaseBuilds": true,
       "enableSeparateBuildPerCPUArchitecture": true
@@ -88,7 +88,6 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0012d5c4-9b20-4830-9c5d-2d1bce7af760"
       }
     }
   }

@@ -5,6 +5,12 @@
   "seatNumber": "Seat Number",
   "serverIP": "Server IP Address",
   "language": "Language",
+  "role": "Role",
+  "roles": {
+    "editor": "Editor",
+    "operator": "Operator",
+    "general": "General"
+  },
   "defaultScreen": {
     "logoAlt": "1% Club Logo",
     "loadingPlayerData": "Loading player data...",
@@ -36,8 +42,19 @@
     "tipButtonText": "?",
     "swipeInstructions": "Swipe left for (YES) to add correct answer",
     "noIncorrectAnswers": "No incorrect answers to review",
+    "playersTitle": "Players",
+    "loadingPlayers": "Loading players...",
+    "noPlayersFound": "No players found",
     "yes": "YES",
-    "no": "NO"
+    "no": "NO",
+    "countdownLabel": "Countdown:",
+    "prizePoolLabel": "Prize Pool:",
+    "changeLabel": "Change:",
+    "remainingPlayersLabel": "Remaining players:",
+    "eliminatedLabel": "Eliminated:",
+    "correctAnswersLabel": "Correct answers:",
+    "incorrectLabel": "Incorrect:",
+    "passesLabel": "Passes:"
   },
   "adminScreen": {
     "enterPassword": "Enter Admin Password",

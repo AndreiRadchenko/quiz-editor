@@ -1,6 +1,7 @@
 import {
   AppContextType,
   iQuizSate,
+  PlayerType,
   SeatDataType,
   TierDataType,
 } from '../types';
@@ -47,6 +48,30 @@ export const fetchPlayerData = async (
     return (await response.json()) as SeatDataType;
   } catch (error) {
     console.error('Error fetching player data:', error);
+    throw error; // Re-throw to be caught by TanStack Query
+  }
+};
+
+export const fetchSeatsData = async (
+  serverIP: string | null,
+  playerType?: PlayerType,
+): Promise<SeatDataType | null> => {
+  const baseUrl = getBaseUrl(serverIP);
+  if (!baseUrl ) return null;
+
+  try {
+    let response: Response;
+    if (!playerType) {
+      response = await fetch(`${baseUrl}/seats`);
+    } else {
+      response = await fetch(`${baseUrl}/seats?playerType=${playerType}`);
+    }
+    if (!response.ok) {
+      throw new Error(`Failed to fetch seats data: ${response.status}`);
+    }
+    return (await response.json()) as SeatDataType;
+  } catch (error) {
+    console.error('Error fetching seats data:', error);
     throw error; // Re-throw to be caught by TanStack Query
   }
 };
