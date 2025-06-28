@@ -74,5 +74,12 @@
     "webSocketError": "WebSocket connection error. Please check settings.",
     "adminPasswordIncorrect": "Incorrect admin password.",
     "unknownError": "An unknown error occurred."
+  },
+  "playerItem": {
+    "rankLabel": "Rank:",
+    "usedPassesLabel": "Passes:",
+    "seatLabel": "Seat:",
+    "companyLabel": "Company:",
+    "answerLabel": "Answer:"
   }
 }

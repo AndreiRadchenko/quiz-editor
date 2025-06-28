@@ -61,12 +61,10 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       flexDirection: 'row',
       justifyContent: 'space-between',
       flexWrap: 'wrap',
-      // marginBottom: theme.spacing.xs,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      // marginBottom: theme.spacing.sm,
     },
     section: {
       flex: 1,
@@ -74,7 +72,6 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       gap: theme.spacing.sm,
       minWidth: '30%',
       marginHorizontal: theme.spacing.xs,
-      // marginVertical: theme.spacing.xs,
     },
     column: {
       marginHorizontal: theme.spacing.xs,
@@ -82,7 +79,6 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     headerText: {
       ...theme.components.text.body,
       fontSize: theme.fontSize.base,
-      fontWeight: theme.fontWeight.semibold,
     },
     headerValueText: {
       ...theme.components.text.body,
@@ -95,12 +91,14 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       ...theme.components.text.body,
       fontSize: theme.fontSize.base,
       fontWeight: theme.fontWeight.medium,
+      fontFamily: 'monospace',
     },
     dataValue: {
       ...theme.components.text.body,
       fontSize: theme.fontSize.base,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accent,
+      fontFamily: 'monospace',
     },
   });
 

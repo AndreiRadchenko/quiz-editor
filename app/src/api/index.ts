@@ -54,10 +54,10 @@ export const fetchPlayerData = async (
 
 export const fetchSeatsData = async (
   serverIP: string | null,
-  playerType?: PlayerType,
-): Promise<SeatDataType | null> => {
+  playerType?: PlayerType
+): Promise<SeatDataType[] | null> => {
   const baseUrl = getBaseUrl(serverIP);
-  if (!baseUrl ) return null;
+  if (!baseUrl) return null;
 
   try {
     let response: Response;
@@ -69,7 +69,7 @@ export const fetchSeatsData = async (
     if (!response.ok) {
       throw new Error(`Failed to fetch seats data: ${response.status}`);
     }
-    return (await response.json()) as SeatDataType;
+    return (await response.json()) as SeatDataType[];
   } catch (error) {
     console.error('Error fetching seats data:', error);
     throw error; // Re-throw to be caught by TanStack Query
