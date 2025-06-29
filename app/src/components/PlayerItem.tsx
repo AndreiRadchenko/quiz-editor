@@ -25,7 +25,7 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
 
   if (!player) return null;
 
-  const playerAnswer = ''; // This would eventually come from player data
+  const playerAnswer = player.currentAnswer || ''; // This would eventually come from player data
   const usedPasses =
     player.usedPassOne && player.usedPassTwo
       ? 2
@@ -99,7 +99,7 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: theme.spacing.xs,
-      gap: theme.spacing.lg,
+      // gap: theme.spacing.lg,
     },
     playerName: {
       fontSize: theme.fontSize.lg,
@@ -113,8 +113,8 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
     label: {
       textAlign: 'right',
       color: 'white',
-      marginRight: theme.spacing.xs,
-      width: 100, // Fixed width for labels
+      // marginRight: theme.spacing.xs,
+      width: 90, // Fixed width for labels
       fontSize: theme.fontSize.base,
       fontWeight: theme.fontWeight.semibold,
     },
@@ -139,12 +139,12 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
       fontSize: theme.fontSize.base,
     },
     thirdRow: {
-      flex: 1,
+      // flex: 1,
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
       marginBottom: theme.spacing.xs,
-      gap: theme.spacing.md,
+      // gap: theme.spacing.md,
     },
     companyContainer: {
       alignItems: 'flex-start',
@@ -169,6 +169,8 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.xs,
+      flexWrap: 'wrap',
+      maxWidth: 200,
     },
     answerLabel: {
       color: 'white',
@@ -203,9 +205,7 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
 
             <View style={styles.infoContainer}>
               <View style={styles.topRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={styles.playerName}>{player.name}</Text>
-                </View>
+                <Text style={styles.playerName}>{player.name}</Text>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -240,10 +240,14 @@ export const PlayerItem = ({ item, drag, role }: PlayerItemProps) => {
 
               <View style={styles.thirdRow}>
                 <View style={styles.answerContainer}>
-                  <Text style={styles.answerLabel}>
-                    {t('playerItem.answerLabel')}
-                  </Text>
-                  <Text style={styles.answer}>{playerAnswer || '-'}</Text>
+                  {playerAnswer && (
+                    <>
+                      <Text style={styles.answerLabel}>
+                        {t('playerItem.answerLabel')}
+                      </Text>
+                      <Text style={styles.answer}>{playerAnswer || '-'}</Text>
+                    </>
+                  )}
                 </View>
 
                 {playerRelationsWithRole &&

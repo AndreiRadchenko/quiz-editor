@@ -16,7 +16,7 @@ export const useWebSocket = () => {
   const { serverIP } = useAppContext();
   const [status, setStatus] = useState<WebSocketStatus>('disconnected');
   const [quizState, setQuizState] = useState<iQuizSate | null>(null);
-  const [answers, setAnswers] = useState<iAnswerState[]>([]);
+  // const [answers, setAnswers] = useState<iAnswerState[]>([]);
   const [errorDetails, setErrorDetails] = useState<string | null>(null); // Changed to string only
   const webSocketRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -81,7 +81,11 @@ export const useWebSocket = () => {
           if (['ANSWER', 'CHECK'].includes(messageReceived.event)) {
             return; // Ignore timer messages
           } else if (messageReceived.event === 'TIMER') {
-            setQuizState(prev => prev === null ? null : { ...prev, timerStatus: messageReceived.payload });
+            setQuizState(prev =>
+              prev === null
+                ? null
+                : { ...prev, timerStatus: messageReceived.payload }
+            );
           } else if (
             [
               'QUESTION_PRE',
@@ -112,14 +116,20 @@ export const useWebSocket = () => {
               switch (messageReceived.event) {
                 case 'QUESTION_COMPLETE':
                 case 'BUYOUT_COMPLETE':
-                  setAnswers([]);
+                  // Invalidate the players editor query to trigger a refetch
+                  queryClient.invalidateQueries({
+                    queryKey: ['players', 'editor'],
+                  });
                   break;
               }
             }
           } else if (messageReceived.event === 'UPDATE_PLAYERS') {
             const updatedState = await fetchQuizState(serverIP);
             setQuizState(updatedState);
-          }  else {
+            queryClient.invalidateQueries({
+              queryKey: ['players', 'editor'],
+            });
+          } else {
             console.warn(
               'WebSocket message format not recognized:',
               messageReceived
@@ -258,8 +268,6 @@ export const useWebSocket = () => {
     status,
     quizState,
     setQuizState,
-    answers,
-    setAnswers,
     errorDetails,
     sendMessage,
     connectWebSocket: connect,

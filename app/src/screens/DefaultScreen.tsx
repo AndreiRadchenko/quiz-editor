@@ -43,17 +43,13 @@ const DefaultScreen = () => {
 
   // Function to handle player reordering (only for editors)
   const handlePlayersReorder = useCallback((newData: SeatDataType[]) => {
-    setPlayers(newData);
+    // setPlayers(newData);
     // Here you would typically send the new order to your API
     // We're just updating the state here for the demo
   }, []);
 
   // Render function for player items in the draggable list
-  const renderPlayerItem = ({
-    item,
-    drag,
-    isActive,
-  }: RenderItemParams<SeatDataType>) => (
+  const renderPlayerItem = ({ item, drag }: RenderItemParams<SeatDataType>) => (
     <PlayerItem item={item} drag={drag} role={role} />
   );
 
@@ -118,12 +114,6 @@ const DefaultScreen = () => {
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t('defaultScreen.playersTitle')}
-            </Text>
-          </View>
-
           {/* Players content */}
           {playersLoading ? (
             <View style={styles.loadingContainer}>

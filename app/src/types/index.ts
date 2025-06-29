@@ -91,6 +91,7 @@ export type PlayerDataType = {
   boughtOutEndGame: boolean;
   externalId: string;
   image: string; // Player's avatar/image filename
+  currentAnswer?: string | null;
   isAnswerCorrect?: boolean | null;
   isAnswerPass?: boolean | null;
   isAnswerBoughtOut?: boolean | null;
@@ -162,4 +163,3 @@ export interface iAnswerMessage {
   boughtOut?: boolean;
   auto: boolean;
 }
-
