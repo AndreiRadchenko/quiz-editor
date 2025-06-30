@@ -6,7 +6,7 @@ import { PlayerDataType, PlayerType } from '../types';
 export const usePlayerState = () => {
   const { serverIP } = useAppContext();
 
-  const getPlayersData = ( playerType?: PlayerType) => {
+  const getPlayersData = (playerType?: PlayerType) => {
     const queryKey = ['players', playerType];
 
     return useQuery({

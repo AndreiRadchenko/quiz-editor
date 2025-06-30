@@ -1,23 +1,39 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  Platform,
+  unstable_batchedUpdates,
 } from 'react-native';
-import DraggableFlatList, {
-  RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { Gesture } from 'react-native-gesture-handler';
+import ReorderableList, {
+  ReorderableListReorderEvent,
+  reorderItems,
+  useReorderableDrag,
+} from 'react-native-reorderable-list';
 import { useTranslation } from 'react-i18next';
 import { useWebSocketContext } from '../context/WebSocketContext';
 import { useTheme } from '../theme';
 import { ConnectionStatus } from '../components/ConnectionStatus';
 import { QuizHeader } from '../components/QuizHeader';
 import { useAppContext } from '../context/AppContext';
+// import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { usePlayerState } from '../hooks/usePlayerState';
 import { SeatDataType } from '../types';
 import PlayerItem from '../components/PlayerItem';
+import { memo } from 'react';
+
+const MemoizedPlayerItem = memo(PlayerItem);
 
 const DefaultScreen = () => {
   const { t } = useTranslation();
@@ -25,6 +41,7 @@ const DefaultScreen = () => {
   const { role } = useAppContext();
   const { quizState } = useWebSocketContext();
   const [players, setPlayers] = useState<SeatDataType[]>([]);
+  const [updateCounter, setUpdateCounter] = useState(0);
 
   // Use the player state hook to fetch players data
   const { getPlayersData } = usePlayerState();
@@ -37,21 +54,94 @@ const DefaultScreen = () => {
       const playersList = Array.isArray(playersData)
         ? playersData
         : [playersData];
+
       setPlayers(playersList);
     }
   }, [playersData]);
 
   // Function to handle player reordering (only for editors)
   const handlePlayersReorder = useCallback((newData: SeatDataType[]) => {
-    // setPlayers(newData);
+    setPlayers(newData);
     // Here you would typically send the new order to your API
     // We're just updating the state here for the demo
+    // console.log(
+    //   'Players reordered:',
+    //   newData.map(p => p.id)
+    // );
   }, []);
 
-  // Render function for player items in the draggable list
-  const renderPlayerItem = ({ item, drag }: RenderItemParams<SeatDataType>) => (
-    <PlayerItem item={item} drag={drag} role={role} />
+  const moveToTop = useCallback((id: number) => {
+    setPlayers(prevPlayers => {
+      const playerIndex = prevPlayers.findIndex(
+        player => Number(player.id) === Number(id)
+      );
+      if (playerIndex <= 0) return prevPlayers;
+
+      const playerToMove = prevPlayers[playerIndex];
+      const remainingPlayers = prevPlayers.filter(
+        (_, index) => index !== playerIndex
+      );
+      const newPlayers = [playerToMove, ...remainingPlayers];
+      return newPlayers;
+    });
+    console.log(`Moved player ${id} to the top`);
+    setUpdateCounter(prev => prev + 1);
+  }, []);
+
+  const moveToBottom = useCallback((id: number) => {
+    setPlayers(prevPlayers => {
+      const playerIndex = prevPlayers.findIndex(
+        player => Number(player.id) === Number(id)
+      );
+      if (playerIndex > prevPlayers.length - 1) return prevPlayers;
+
+      const playerToMove = prevPlayers[playerIndex];
+      const remainingPlayers = prevPlayers.filter(
+        (_, index) => index !== playerIndex
+      );
+      const newPlayers = [...remainingPlayers, playerToMove];
+      return newPlayers;
+    });
+    console.log(`Moved player ${id} to the bottom`);
+    setUpdateCounter(prev => prev + 1);
+  }, []);
+
+  const renderPlayerItem = useCallback(
+    ({ item }: { item: SeatDataType }) => {
+      return (
+        <MemoizedPlayerItem
+          item={item}
+          role={role}
+          moveToTop={moveToTop}
+          moveToBottom={moveToBottom}
+        />
+      );
+    },
+    [role, moveToTop, moveToBottom]
   );
+  // Create an animated scroll handler for smooth scrolling
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: () => {
+      // Additional scroll animations can be added here if needed
+    },
+  });
+
+  // Drag start handler (worklet function)
+  const handleDragStart = useCallback((event: { index: number }) => {
+    'worklet';
+    console.log('Drag started at index:', event.index);
+  }, []);
+
+  // Drag end handler (worklet function) - more detailed logging and feedback
+  const handleDragEnd = useCallback((event: { from: number; to: number }) => {
+    'worklet';
+
+    if (event.from !== event.to) {
+      console.log(`Player moved from position ${event.from} to ${event.to}`);
+    } else {
+      console.log('Player position unchanged');
+    }
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -60,7 +150,7 @@ const DefaultScreen = () => {
     },
     content: {
       flex: 1,
-      padding: theme.spacing.md,
+      // padding: theme.spacing.xs,
     },
     section: {
       flex: 1,
@@ -123,19 +213,44 @@ const DefaultScreen = () => {
             </View>
           ) : players.length > 0 ? (
             role === 'editor' ? (
-              <DraggableFlatList
+              <ReorderableList
                 data={players}
-                onDragEnd={({ data }) => handlePlayersReorder(data)}
-                keyExtractor={item => item.id.toString()}
+                onReorder={({ from, to }: ReorderableListReorderEvent) => {
+                  console.log(`Reordering from ${from} to ${to}`);
+                  const newData = reorderItems(players, from, to);
+                  handlePlayersReorder(newData);
+                }}
+                keyExtractor={(item: SeatDataType) => item.id.toString()}
+                extraData={`${updateCounter}-${players.map(p => p.id).join('-')}`}
                 renderItem={renderPlayerItem}
                 contentContainerStyle={styles.listContainer}
+                autoscrollThreshold={0.1} // Optimized threshold for better scrolling
+                autoscrollActivationDelta={5} // Reduced activation delta for quicker response
+                autoscrollSpeedScale={3} // Balanced for smoother scrolling
+                animationDuration={1} // Even faster animations for better responsiveness
+                dragEnabled={true}
+                // shouldUpdateActiveItem={true}
+                // onScroll={scrollHandler}
+                // onDragStart={handleDragStart}
+                // onDragEnd={handleDragEnd}
+                // Custom cell animations to control opacity and transform (scale)
+                // cellAnimations={{
+                //   // Set to 1 to disable opacity animation, or adjust as needed (0.8-0.95 is subtle)
+                //   opacity: 1,
+                //   // Override the default transform animations
+                //   transform: [
+                //     // Set scale to 1 to completely disable scaling, or use a subtle value
+                //     { scale: 1.03 },
+                //     // Optionally add a slight translation for visual feedback
+                //     // { translateY: -2 },
+                //   ],
+                // }}
               />
             ) : (
               <FlatList
                 data={players}
-                renderItem={({ item }) => (
-                  <PlayerItem item={item} role={role} />
-                )}
+                renderItem={renderPlayerItem}
+                extraData={`${updateCounter}-${players.map(p => p.id).join('-')}`}
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContainer}
               />

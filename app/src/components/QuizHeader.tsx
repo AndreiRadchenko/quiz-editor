@@ -40,7 +40,10 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   const getTimerDisplay = () => {
     if (!timerStatus) return t('defaultScreen.unknownState');
 
-    if (timerStatus.status === 'running' && timerStatus.remainingTime !== null) {
+    if (
+      timerStatus.status === 'running' &&
+      timerStatus.remainingTime !== null
+    ) {
       return timerStatus.remainingTime.toString();
     } else {
       return timerStatus.status;
@@ -56,6 +59,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       padding: theme.spacing.md,
       paddingBottom: theme.spacing.sm,
       gap: theme.spacing.md,
+      marginBottom: theme.spacing.sm,
     },
     headerRow: {
       flexDirection: 'row',
@@ -106,102 +110,136 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     <View style={styles.headerContainer}>
       <View>
         {/* First Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.currentTierLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {tierLegend || t('defaultScreen.noTierInformation')}
-          </Text>
+        <View style={styles.headerRow}>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.currentTierLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {tierLegend || t('defaultScreen.noTierInformation')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.stateLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {state || t('defaultScreen.unknownState')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.prizePoolLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {prizePool !== undefined
+                ? prizePool.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.stateLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {state || t('defaultScreen.unknownState')}
-          </Text>
-        </View>
+        {/* Second Row */}
+        <View style={styles.headerRow}>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.questionLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {questionLabel || t('defaultScreen.unknownState')}
+            </Text>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.prizePoolLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {prizePool !== undefined ? prizePool.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.countdownLabel')}
+            </Text>
+            <Text style={styles.dataValue}>{getTimerDisplay()}</Text>
+          </View>
 
-      {/* Second Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.questionLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {questionLabel || t('defaultScreen.unknownState')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.countdownLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {getTimerDisplay()}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.changeLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {prizeChange !== undefined ? prizeChange.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.changeLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {prizeChange !== undefined
+                ? prizeChange.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
         </View>
       </View>
 
       <View>
         {/* Third Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.remainingPlayersLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {remainingPlayers !== undefined ? remainingPlayers.toString() : t('defaultScreen.unknownState')}
-          </Text>
+        <View style={styles.headerRow}>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.remainingPlayersLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {remainingPlayers !== undefined
+                ? remainingPlayers.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.correctAnswersLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {correctAnswers !== undefined
+                ? correctAnswers.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.passesLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {passes !== undefined
+                ? passes.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.correctAnswersLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {correctAnswers !== undefined ? correctAnswers.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
+        {/* Fourth Row */}
+        <View style={styles.headerRow}>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.eliminatedLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {eliminatedPlayers !== undefined
+                ? eliminatedPlayers.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.passesLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {passes !== undefined ? passes.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.dataLabel}>
+              {t('defaultScreen.incorrectLabel')}
+            </Text>
+            <Text style={styles.dataValue}>
+              {incorrectAnswers !== undefined
+                ? incorrectAnswers.toString()
+                : t('defaultScreen.unknownState')}
+            </Text>
+          </View>
 
-      {/* Fourth Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.eliminatedLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {eliminatedPlayers !== undefined ? eliminatedPlayers.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.dataLabel}>{t('defaultScreen.incorrectLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {incorrectAnswers !== undefined ? incorrectAnswers.toString() : t('defaultScreen.unknownState')}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          {/* <Text style={styles.dataLabel}>{t('defaultScreen.correctAnswerLabel')}</Text>
+          <View style={styles.section}>
+            {/* <Text style={styles.dataLabel}>{t('defaultScreen.correctAnswerLabel')}</Text>
           <Text style={styles.dataValue}>
             {correctAnswer || t('defaultScreen.unknownState')}
           </Text> */}
+          </View>
         </View>
-      </View>
       </View>
     </View>
   );

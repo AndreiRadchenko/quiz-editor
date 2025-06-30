@@ -80,6 +80,8 @@
     "usedPassesLabel": "Passes:",
     "seatLabel": "Seat:",
     "companyLabel": "Company:",
-    "answerLabel": "Answer:"
+    "answerLabel": "Answer:",
+    "moveToTopTooltip": "Move to top",
+    "moveToBottomTooltip": "Move to bottom"
   }
 }

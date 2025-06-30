@@ -85,6 +85,8 @@
     "usedPassesLabel": "Паси:",
     "seatLabel": "Місце:",
     "companyLabel": "Компанія:",
-    "answerLabel": "Відповідь:"
+    "answerLabel": "Відповідь:",
+    "moveToTopTooltip": "Перемістити вгору",
+    "moveToBottomTooltip": "Перемістити вниз"
   }
 }
