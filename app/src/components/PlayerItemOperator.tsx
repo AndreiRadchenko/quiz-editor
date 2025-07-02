@@ -102,10 +102,6 @@ export const PlayerItem = ({
       borderLeftWidth: 4,
       backgroundColor: '#510bf5', // Amber/orange color for pass
     },
-    playerItemBoughtOut: {
-      borderLeftWidth: 4,
-      backgroundColor: '#b89217', // Amber/orange color for pass
-    },
     activeItem: {
       ...Platform.select({
         ios: {
@@ -143,7 +139,7 @@ export const PlayerItem = ({
     container: {
       paddingVertical: theme.spacing.sm,
       paddingLeft: theme.spacing.sm,
-      paddingRight: theme.spacing['3xl'], // Increased right padding to make room for quick action buttons
+      paddingRight: theme.spacing.md, // Increased right padding to make room for quick action buttons
       flexDirection: 'row',
       position: 'relative',
     },
@@ -178,13 +174,17 @@ export const PlayerItem = ({
     label: {
       textAlign: 'right',
       color: 'white',
-      width: 90, // Fixed width for labels
       fontSize: theme.fontSize.base,
       fontWeight: theme.fontWeight.semibold,
     },
     value: {
       color: '#FFD700', // Gold color for values
       fontWeight: theme.fontWeight.semibold,
+      fontSize: theme.fontSize.lg,
+    },
+    valueOperator: {
+      color: theme.colors.primaryForeground, // Gold color for values
+      fontWeight: theme.fontWeight.normal,
       fontSize: theme.fontSize.lg,
     },
     occupation: {
@@ -210,8 +210,13 @@ export const PlayerItem = ({
     },
     companyContainer: {
       alignItems: 'flex-start',
-      flexDirection: 'row',
-      gap: theme.spacing.sm,
+      flexDirection: 'column',
+      // gap: theme.spacing.sm,
+    },
+    companyContainerOperator: {
+      alignItems: 'flex-start',
+      flexDirection: 'column',
+      // gap: theme.spacing.sm,
     },
     company: {
       color: 'white',
@@ -226,6 +231,11 @@ export const PlayerItem = ({
       flexDirection: 'column',
       alignItems: 'flex-start',
       width: 300,
+    },
+    relationListOperator: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      // width: 300,
     },
     answerContainer: {
       flexDirection: 'row',
@@ -307,34 +317,10 @@ export const PlayerItem = ({
         player.isAnswerCorrect === true && styles.playerItemCorrect,
         player.isAnswerCorrect === false && styles.playerItemIncorrect,
         player.isAnswerPass === true && styles.playerItemPass,
-        player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}
     >
-      <Pressable
-        style={{ flex: 1 }}
-        onLongPress={role === 'editor' ? drag : undefined}
-        onPressIn={() => {
-          if (role === 'editor') {
-            pressed.value = true;
-          }
-        }}
-        onPressOut={() => {
-          pressed.value = false;
-        }}
-        delayLongPress={200}
-        disabled={role !== 'editor'}
-      >
+      <Pressable style={{ flex: 1 }}>
         <View style={styles.container}>
-          {/* Drag handle indicator (visible only for editors) */}
-          {role === 'editor' && (
-            <View style={styles.pressable}>
-              <View style={styles.dragHandle}>
-                <View style={styles.dragHandleDot} />
-                <View style={styles.dragHandleDot} />
-                <View style={styles.dragHandleDot} />
-              </View>
-            </View>
-          )}
           <View style={styles.imageContainer}>
             <Image source={playerImageSource} style={styles.playerImage} />
           </View>
@@ -343,123 +329,34 @@ export const PlayerItem = ({
               <Text style={styles.playerName}>{player.name}</Text>
               <View
                 style={{
+                  flex: 1,
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'flex-end',
+                  gap: theme.spacing.md,
                 }}
               >
-                <Text style={styles.label}>
-                  {t('playerItem.rankLabel')}{' '}
-                  <Text style={styles.value}>{player.rank || ''}</Text>
-                </Text>
-                <Text style={styles.label}>
-                  {t('playerItem.usedPassesLabel')}{' '}
-                  <Text style={styles.value}>{usedPasses}</Text>
-                </Text>
                 <Text style={styles.label}>
                   {t('playerItem.seatLabel')}{' '}
                   <Text style={styles.value}>{item.seat}</Text>
                 </Text>
+                <Text style={styles.label}>
+                  <Text style={styles.valueOperator}>{item.cameras}</Text>
+                </Text>
+                <Text style={styles.valueOperator}>{item.description}</Text>
               </View>
             </View>
-
-            {player.occupation && (
-              <Text style={styles.occupation}>{player.occupation || ''}</Text>
-            )}
-            {player.notes && (
-              <Text style={styles.notes}>{player.notes || ''}</Text>
-            )}
-            {player.goal && (
-              <Text style={styles.goal}>{player.goal || ''}</Text>
-            )}
-
-            <View style={styles.thirdRow}>
-              <View style={styles.answerContainer}>
-                {playerAnswer && (
-                  <>
-                    <Text style={styles.answerLabel}>
-                      {t('playerItem.answerLabel')}
-                    </Text>
-                    <Text style={styles.answer}>{playerAnswer || '-'}</Text>
-                  </>
-                )}
+            {playerRelationsWithRole && playerRelationsWithRole.length > 0 && (
+              <View style={styles.companyContainerOperator}>
+                <Text style={styles.answerLabel}>
+                  {t('playerItem.companyLabel')}
+                </Text>
+                <View style={styles.relationListOperator}>
+                  {playerRelationsWithRole.map((relation, index) => relation)}
+                </View>
               </View>
-
-              {playerRelationsWithRole &&
-                playerRelationsWithRole.length > 0 && (
-                  <View style={styles.companyContainer}>
-                    <Text style={styles.answerLabel}>
-                      {t('playerItem.companyLabel')}
-                    </Text>
-                    <View style={styles.relationList}>
-                      {playerRelationsWithRole.map(
-                        (relation, index) => relation
-                      )}
-                    </View>
-                  </View>
-                )}
-            </View>
+            )}
           </View>
-
-          {/* Quick action buttons for moving item to top/bottom */}
-          {role && ['editor'].includes(role) && (
-            <View style={styles.quickActionsContainer}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.quickActionButton,
-                  pressed && styles.quickActionButtonActive,
-                ]}
-                // style={styles.quickActionButton}
-                onPress={() => {
-                  moveToTop && moveToTop(Number(item.id));
-                }}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                pressRetentionOffset={{
-                  top: 10,
-                  right: 10,
-                  bottom: 10,
-                  left: 10,
-                }}
-                // android_ripple={{
-                //   color: 'rgba(255, 255, 255, 0.3)',
-                //   borderless: true,
-                //   radius: 27,
-                // }}
-                disabled={!moveToTop}
-              >
-                <MaterialIcons name="arrow-upward" size={32} color="white" />
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.quickActionButton,
-                  pressed && styles.quickActionButtonActive,
-                ]}
-                onPress={() => {
-                  moveToBottom && moveToBottom(Number(item.id));
-                }}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                pressRetentionOffset={{
-                  top: 10,
-                  right: 10,
-                  bottom: 10,
-                  left: 10,
-                }}
-                // android_ripple={{
-                //   color: 'rgba(255, 255, 255, 0.3)',
-                //   borderless: true,
-                //   radius: 24,
-                // }}
-                disabled={!moveToBottom}
-              >
-                <MaterialIcons
-                  name="arrow-downward"
-                  size={32} // Slightly larger icon
-                  color="white"
-                />
-              </Pressable>
-            </View>
-          )}
         </View>
       </Pressable>
     </Animated.View>

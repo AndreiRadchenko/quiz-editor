@@ -61,5 +61,76 @@ export const useRelations = (
       );
     });
   }
-  return [];
+  return relations.map((relation, index) => {
+    const [playerName, relationship] = relation.split('-');
+    const relationData = playersData?.find(
+      s => s.player?.name === playerName.trim()
+    );
+    if (relationData) {
+      return (
+        <View
+          key={`relation-${index}`}
+          style={{
+            // flex: 1,
+            // flexGrow: 1,
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+            flexWrap: 'wrap',
+            width: '100%',
+          }}
+        >
+          <Text
+            style={{
+              fontWeight: 'normal',
+              color: 'white',
+              fontSize: theme.fontSize.base,
+              width: 250,
+            }}
+          >
+            {`${relationship ? `${playerName.trim()} (${relationship})` : `${playerName.trim()}`}`}
+          </Text>
+          <Text
+            style={{
+              fontWeight: 'bold',
+              fontSize: theme.fontSize.base,
+              width: 40,
+              color: '#FFD700',
+            }}
+          >
+            {`${relationData.seat}`}
+          </Text>
+          <Text
+            style={{
+              width: 80,
+              fontSize: theme.fontSize.base,
+              fontWeight: 'normal',
+              color: theme.colors.primaryForeground,
+            }}
+          >
+            {`${relationData.cameras}`}
+          </Text>
+          <Text
+            style={{
+              fontWeight: 'normal',
+              fontSize: theme.fontSize.base,
+              color: theme.colors.primaryForeground,
+            }}
+          >
+            {`${relationData.description}`}
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <Text
+        key={`relation-${index}`}
+        style={{
+          fontWeight: 'normal',
+          color: 'white',
+          fontSize: theme.fontSize.base,
+        }}
+      >{`${relationship ? `${playerName.trim()} (${relationship})` : playerName.trim()}`}</Text>
+    );
+  });
 };

@@ -94,9 +94,9 @@ export const fetchTiersData = async (
   }
 };
 
-export const updateQuestionCorrectAnswer = async (
-  questionLabel: string,
-  newCorrectAnswer: string,
+export const updateSeatEditorIndex = async (
+  seatNumber: number,
+  newEditorIndex: number,
   serverIP: string | null
 ): Promise<void> => {
   const baseUrl = getBaseUrl(serverIP);
@@ -104,69 +104,25 @@ export const updateQuestionCorrectAnswer = async (
     throw new Error('Server IP is not set');
   }
 
-  if (!questionLabel.trim()) {
-    throw new Error('Question label is required');
-  }
-
-  if (!newCorrectAnswer.trim()) {
-    throw new Error('New correct answer is required');
-  }
-
   try {
-    const response = await fetch(
-      `${baseUrl}/questions?label=${questionLabel}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          correctAnswer: newCorrectAnswer,
-        }),
-      }
-    );
+    const response = await fetch(`${baseUrl}/game/editor-index/${seatNumber}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        editorIndex: newEditorIndex,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to update question: ${response.status}`);
+      throw new Error(`Failed to update seat editor index: ${response.status}`);
     }
 
     // If the API returns data, you can return it here
     // return await response.json();
   } catch (error) {
-    console.error('Error updating question correct answer:', error);
-    throw error; // Re-throw to be caught by the caller
-  }
-};
-
-export const setAnswersCorrect = async (
-  seats: number[],
-  serverIP: string | null
-): Promise<void> => {
-  // Implement the logic to set answers as correct
-  console.log('Sending correct answers for seats:', seats);
-  const baseUrl = getBaseUrl(serverIP);
-  if (!baseUrl) {
-    throw new Error('Server IP is not set');
-  }
-
-  if (!Array.isArray(seats) || seats.length === 0) {
-    throw new Error('Invalid seats array');
-  }
-
-  try {
-    const response = await fetch(`${baseUrl}/game/correct-answers`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ seats }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to set answers as correct: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Error setting answers as correct:', error);
+    console.error('Error updating editor index:', error);
     throw error; // Re-throw to be caught by the caller
   }
 };

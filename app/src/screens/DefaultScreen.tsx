@@ -14,7 +14,11 @@ import {
   Platform,
   unstable_batchedUpdates,
 } from 'react-native';
-import { useAnimatedScrollHandler } from 'react-native-reanimated';
+import {
+  useAnimatedScrollHandler,
+  LayoutAnimationConfig,
+  Layout,
+} from 'react-native-reanimated';
 import { Gesture } from 'react-native-gesture-handler';
 import ReorderableList, {
   ReorderableListReorderEvent,
@@ -32,13 +36,16 @@ import { usePlayerState } from '../hooks/usePlayerState';
 import { SeatDataType } from '../types';
 import PlayerItem from '../components/PlayerItem';
 import { memo } from 'react';
+import PlayerItemOperator from '../components/PlayerItemOperator';
+import { updateSeatEditorIndex } from '../api';
 
 const MemoizedPlayerItem = memo(PlayerItem);
+const MemoizedPlayerItemOperator = memo(PlayerItemOperator);
 
 const DefaultScreen = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const { role } = useAppContext();
+  const { role, serverIP } = useAppContext();
   const { quizState } = useWebSocketContext();
   const [players, setPlayers] = useState<SeatDataType[]>([]);
   const [updateCounter, setUpdateCounter] = useState(0);
@@ -54,68 +61,104 @@ const DefaultScreen = () => {
       const playersList = Array.isArray(playersData)
         ? playersData
         : [playersData];
-
-      setPlayers(playersList);
+      if (
+        quizState?.state &&
+        ['QUESTION_COMPLETE', 'BUYOUT_COMPLETE'].includes(quizState.state)
+      ) {
+        setPlayers(playersList);
+      } else if (
+        quizState?.state &&
+        ['QUESTION_PRE', 'IDLE'].includes(quizState.state)
+      ) {
+        setPlayers([]);
+      }
     }
-  }, [playersData]);
+  }, [playersData, quizState?.state]);
 
   // Function to handle player reordering (only for editors)
-  const handlePlayersReorder = useCallback((newData: SeatDataType[]) => {
-    setPlayers(newData);
-    // Here you would typically send the new order to your API
-    // We're just updating the state here for the demo
-    // console.log(
-    //   'Players reordered:',
-    //   newData.map(p => p.id)
-    // );
-  }, []);
+  const handlePlayersReorder = useCallback(
+    (newData: SeatDataType[], from: number, to: number) => {
+      const seatToUpdate = newData[to].seat;
+      console.log(`Updating seat ${seatToUpdate} to position ${to}`);
+      updateSeatEditorIndex(seatToUpdate, to, serverIP);
+      setPlayers(newData);
+    },
+    []
+  );
 
-  const moveToTop = useCallback((id: number) => {
-    setPlayers(prevPlayers => {
-      const playerIndex = prevPlayers.findIndex(
+  // const moveToTop = useCallback((id: number) => {
+  //   const playerIndex = players.findIndex(
+  //     player => Number(player.id) === Number(id)
+  //   );
+  //   if (playerIndex <= 0) return;
+
+  //   updateSeatEditorIndex(players[playerIndex].seat, 0, serverIP);
+  //   const newData = reorderItems(players, playerIndex, 0);
+  //   setPlayers(newData);
+  //   console.log(`Moved player ${id} to the top`);
+  //   setUpdateCounter(prev => prev + 1);
+  // }, []);
+
+  const moveToTop = useCallback(
+    (id: number) => {
+      const playerIndex = players.findIndex(
         player => Number(player.id) === Number(id)
       );
-      if (playerIndex <= 0) return prevPlayers;
+      if (playerIndex <= 0) return;
 
-      const playerToMove = prevPlayers[playerIndex];
-      const remainingPlayers = prevPlayers.filter(
-        (_, index) => index !== playerIndex
-      );
-      const newPlayers = [playerToMove, ...remainingPlayers];
-      return newPlayers;
-    });
-    console.log(`Moved player ${id} to the top`);
-    setUpdateCounter(prev => prev + 1);
-  }, []);
+      // Custom logic: move item to top while preserving order of others
+      const playerToMove = players[playerIndex];
+      const otherPlayers = players.filter((_, index) => index !== playerIndex);
+
+      // Create new array with moved item at top, others in same order
+      const newData = [playerToMove, ...otherPlayers];
+
+      updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
+      setPlayers(newData);
+      console.log(`Moved player ${id} to the top`);
+      setUpdateCounter(prev => prev + 1);
+    },
+    [players, serverIP]
+  );
 
   const moveToBottom = useCallback((id: number) => {
-    setPlayers(prevPlayers => {
-      const playerIndex = prevPlayers.findIndex(
-        player => Number(player.id) === Number(id)
-      );
-      if (playerIndex > prevPlayers.length - 1) return prevPlayers;
+    const playerIndex = players.findIndex(
+      player => Number(player.id) === Number(id)
+    );
+    if (playerIndex > players.length - 1) return;
 
-      const playerToMove = prevPlayers[playerIndex];
-      const remainingPlayers = prevPlayers.filter(
-        (_, index) => index !== playerIndex
-      );
-      const newPlayers = [...remainingPlayers, playerToMove];
-      return newPlayers;
-    });
+    const playerToMove = players[playerIndex];
+    console.log(`Moving player ${id} from index ${playerIndex} to bottom`);
+    const remainingPlayers = players.filter(
+      (_, index) => index !== playerIndex
+    );
+    updateSeatEditorIndex(playerToMove.seat, players.length - 1, serverIP);
+    setPlayers([...remainingPlayers, playerToMove]);
     console.log(`Moved player ${id} to the bottom`);
     setUpdateCounter(prev => prev + 1);
   }, []);
 
   const renderPlayerItem = useCallback(
     ({ item }: { item: SeatDataType }) => {
-      return (
-        <MemoizedPlayerItem
-          item={item}
-          role={role}
-          moveToTop={moveToTop}
-          moveToBottom={moveToBottom}
-        />
-      );
+      if (role === 'operator') {
+        return (
+          <MemoizedPlayerItemOperator
+            item={item}
+            role={role}
+            moveToTop={moveToTop}
+            moveToBottom={moveToBottom}
+          />
+        );
+      } else {
+        return (
+          <MemoizedPlayerItem
+            item={item}
+            role={role}
+            moveToTop={moveToTop}
+            moveToBottom={moveToBottom}
+          />
+        );
+      }
     },
     [role, moveToTop, moveToBottom]
   );
@@ -218,7 +261,7 @@ const DefaultScreen = () => {
                 onReorder={({ from, to }: ReorderableListReorderEvent) => {
                   console.log(`Reordering from ${from} to ${to}`);
                   const newData = reorderItems(players, from, to);
-                  handlePlayersReorder(newData);
+                  handlePlayersReorder(newData, from, to);
                 }}
                 keyExtractor={(item: SeatDataType) => item.id.toString()}
                 extraData={`${updateCounter}-${players.map(p => p.id).join('-')}`}
@@ -227,8 +270,18 @@ const DefaultScreen = () => {
                 autoscrollThreshold={0.1} // Optimized threshold for better scrolling
                 autoscrollActivationDelta={5} // Reduced activation delta for quicker response
                 autoscrollSpeedScale={3} // Balanced for smoother scrolling
-                animationDuration={1} // Even faster animations for better responsiveness
+                animationDuration={50} // Set to 0 for immediate response
                 dragEnabled={true}
+                cellAnimations={{
+                  opacity: 0.9, // Very subtle opacity change
+                  transform: [
+                    { scale: 1.01 }, // Very subtle scale change
+                  ],
+                }}
+                itemLayoutAnimation={Layout.springify().withInitialValues({
+                  originX: 0,
+                  originY: 0,
+                })} // Use the Layout object directly
                 // shouldUpdateActiveItem={true}
                 // onScroll={scrollHandler}
                 // onDragStart={handleDragStart}

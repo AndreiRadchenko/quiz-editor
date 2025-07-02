@@ -74,8 +74,8 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       flex: 1,
       flexDirection: 'row',
       gap: theme.spacing.sm,
-      minWidth: '30%',
-      marginHorizontal: theme.spacing.xs,
+      minWidth: '33%',
+      // marginRight: theme.spacing.xs,
     },
     column: {
       marginHorizontal: theme.spacing.xs,

@@ -13,7 +13,7 @@ const INITIAL_RECONNECT_DELAY = 1000; // 1 second
 const MAX_RECONNECT_DELAY = 30000; // 30 seconds
 
 export const useWebSocket = () => {
-  const { serverIP } = useAppContext();
+  const { serverIP, role } = useAppContext();
   const [status, setStatus] = useState<WebSocketStatus>('disconnected');
   const [quizState, setQuizState] = useState<iQuizSate | null>(null);
   // const [answers, setAnswers] = useState<iAnswerState[]>([]);
@@ -102,14 +102,6 @@ export const useWebSocket = () => {
               messageReceived.payload &&
               typeof messageReceived.payload === 'object'
             ) {
-              // if (messageReceived.payload.state === quizState?.state) {
-              //   console.log(
-              //     'Quiz state unchanged, not updating:',
-              //     messageReceived.payload.state
-              //   );
-              //   return; // Avoid unnecessary updates if state hasn't changed
-              // }
-              // updateQuizState(messageReceived.payload);
               setQuizState(prev => ({ ...prev, ...messageReceived.payload }));
 
               // Handle specific messages for query invalidation
@@ -117,18 +109,27 @@ export const useWebSocket = () => {
                 case 'QUESTION_COMPLETE':
                 case 'BUYOUT_COMPLETE':
                   // Invalidate the players editor query to trigger a refetch
-                  queryClient.invalidateQueries({
+                  queryClient.resetQueries({
                     queryKey: ['players', 'editor'],
                   });
+                  break;
+                case 'QUESTION_PRE':
+                case 'IDLE':
                   break;
               }
             }
           } else if (messageReceived.event === 'UPDATE_PLAYERS') {
             const updatedState = await fetchQuizState(serverIP);
             setQuizState(updatedState);
-            queryClient.invalidateQueries({
+            queryClient.resetQueries({
               queryKey: ['players', 'editor'],
             });
+          } else if (messageReceived.event === 'UPDATE_INDEX') {
+            if (role !== 'editor') {
+              queryClient.resetQueries({
+                queryKey: ['players', 'editor'],
+              });
+            }
           } else {
             console.warn(
               'WebSocket message format not recognized:',
