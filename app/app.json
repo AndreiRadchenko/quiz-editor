@@ -17,10 +17,7 @@
             "shrinkResources": true,
             "enableProguardInReleaseBuilds": true,
             "packagingOptions": {
-              "pickFirst": [
-                "**/libc++_shared.so",
-                "**/libjsc.so"
-              ]
+              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"]
             }
           }
         }

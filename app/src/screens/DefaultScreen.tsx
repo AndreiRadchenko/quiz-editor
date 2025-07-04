@@ -5,21 +5,15 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Platform,
-  unstable_batchedUpdates,
-} from 'react-native';
-import {
-  useAnimatedScrollHandler,
-  LayoutAnimationConfig,
-  Layout,
-} from 'react-native-reanimated';
-import { Gesture } from 'react-native-gesture-handler';
+// import 'react-native-get-random-values';
+// import { v4 as uuidv4 } from 'uuid';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+// import {
+//   useAnimatedScrollHandler,
+//   LayoutAnimationConfig,
+//   Layout,
+// } from 'react-native-reanimated';
+// import { Gesture } from 'react-native-gesture-handler';
 import ReorderableList, {
   ReorderableListReorderEvent,
   reorderItems,
@@ -38,8 +32,9 @@ import PlayerItem from '../components/PlayerItem';
 import { memo } from 'react';
 import PlayerItemOperator from '../components/PlayerItemOperator';
 import { updateSeatEditorIndex } from '../api';
+import SimplePlayerItem from '../components/simplePlayerItem';
 
-const MemoizedPlayerItem = memo(PlayerItem);
+// const MemoizedPlayerItem = memo(SimplePlayerItem);
 const MemoizedPlayerItemOperator = memo(PlayerItemOperator);
 
 const DefaultScreen = () => {
@@ -80,25 +75,15 @@ const DefaultScreen = () => {
     (newData: SeatDataType[], from: number, to: number) => {
       const seatToUpdate = newData[to].seat;
       console.log(`Updating seat ${seatToUpdate} to position ${to}`);
-      updateSeatEditorIndex(seatToUpdate, to, serverIP);
+
       setPlayers(newData);
+      setUpdateCounter(prev => prev + 1);
+      updateSeatEditorIndex(seatToUpdate, to, serverIP);
     },
     []
   );
 
-  // const moveToTop = useCallback((id: number) => {
-  //   const playerIndex = players.findIndex(
-  //     player => Number(player.id) === Number(id)
-  //   );
-  //   if (playerIndex <= 0) return;
-
-  //   updateSeatEditorIndex(players[playerIndex].seat, 0, serverIP);
-  //   const newData = reorderItems(players, playerIndex, 0);
-  //   setPlayers(newData);
-  //   console.log(`Moved player ${id} to the top`);
-  //   setUpdateCounter(prev => prev + 1);
-  // }, []);
-
+  // Replace your moveToTop function with this one:
   const moveToTop = useCallback(
     (id: number) => {
       const playerIndex = players.findIndex(
@@ -106,20 +91,60 @@ const DefaultScreen = () => {
       );
       if (playerIndex <= 0) return;
 
-      // Custom logic: move item to top while preserving order of others
+      // Use the same reordering function that the library uses internally
+      const newData = reorderItems(players, playerIndex, 0);
+
+      // Update the server
       const playerToMove = players[playerIndex];
-      const otherPlayers = players.filter((_, index) => index !== playerIndex);
-
-      // Create new array with moved item at top, others in same order
-      const newData = [playerToMove, ...otherPlayers];
-
       updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
+
+      // Update local state
       setPlayers(newData);
-      console.log(`Moved player ${id} to the top`);
       setUpdateCounter(prev => prev + 1);
     },
     [players, serverIP]
   );
+
+  // const moveToTop = useCallback(
+  //   (id: number) => {
+  //     const playerIndex = players.findIndex(
+  //       player => Number(player.id) === Number(id)
+  //     );
+  //     if (playerIndex <= 0) return;
+
+  //     // Custom logic: move item to top while preserving order of others
+  //     const playerToMove = players[playerIndex];
+  //     const otherPlayers = players.filter((_, index) => index !== playerIndex);
+
+  //     // Create new array with moved item at top, others in same order
+  //     const newData = [playerToMove, ...otherPlayers];
+
+  //     updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
+  //     setPlayers(newData);
+  //     console.log(`Moved player ${id} to the top`);
+  //     setUpdateCounter(prev => prev + 1);
+  //   },
+  //   [players, serverIP]
+  // );
+
+  // Make sure moveToTop is optimized:
+  // const moveToTop = useCallback((id: number) => {
+  //   console.time('moveToTop');
+  //   setPlayers(prevPlayers => {
+  //     const playerIndex = prevPlayers.findIndex(
+  //       player => Number(player.id) === Number(id)
+  //     );
+  //     if (playerIndex <= 0) return prevPlayers;
+
+  //     const playerToMove = prevPlayers[playerIndex];
+  //     const remainingPlayers = prevPlayers.filter(
+  //       (_, index) => index !== playerIndex
+  //     );
+
+  //     return [playerToMove, ...remainingPlayers];
+  //   });
+  //   console.timeEnd('moveToTop');
+  // }, []);
 
   const moveToBottom = useCallback((id: number) => {
     const playerIndex = players.findIndex(
@@ -151,7 +176,7 @@ const DefaultScreen = () => {
         );
       } else {
         return (
-          <MemoizedPlayerItem
+          <PlayerItem
             item={item}
             role={role}
             moveToTop={moveToTop}
@@ -162,29 +187,29 @@ const DefaultScreen = () => {
     },
     [role, moveToTop, moveToBottom]
   );
-  // Create an animated scroll handler for smooth scrolling
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: () => {
-      // Additional scroll animations can be added here if needed
-    },
-  });
+  // // Create an animated scroll handler for smooth scrolling
+  // const scrollHandler = useAnimatedScrollHandler({
+  //   onScroll: () => {
+  //     // Additional scroll animations can be added here if needed
+  //   },
+  // });
 
-  // Drag start handler (worklet function)
-  const handleDragStart = useCallback((event: { index: number }) => {
-    'worklet';
-    console.log('Drag started at index:', event.index);
-  }, []);
+  // // Drag start handler (worklet function)
+  // const handleDragStart = useCallback((event: { index: number }) => {
+  //   'worklet';
+  //   console.log('Drag started at index:', event.index);
+  // }, []);
 
-  // Drag end handler (worklet function) - more detailed logging and feedback
-  const handleDragEnd = useCallback((event: { from: number; to: number }) => {
-    'worklet';
+  // // Drag end handler (worklet function) - more detailed logging and feedback
+  // const handleDragEnd = useCallback((event: { from: number; to: number }) => {
+  //   'worklet';
 
-    if (event.from !== event.to) {
-      console.log(`Player moved from position ${event.from} to ${event.to}`);
-    } else {
-      console.log('Player position unchanged');
-    }
-  }, []);
+  //   if (event.from !== event.to) {
+  //     console.log(`Player moved from position ${event.from} to ${event.to}`);
+  //   } else {
+  //     console.log('Player position unchanged');
+  //   }
+  // }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -263,14 +288,14 @@ const DefaultScreen = () => {
                   const newData = reorderItems(players, from, to);
                   handlePlayersReorder(newData, from, to);
                 }}
-                keyExtractor={(item: SeatDataType) => item.id.toString()}
-                extraData={`${updateCounter}-${players.map(p => p.id).join('-')}`}
+                keyExtractor={item => `player-${item.id}-${item.seat}`}
+                extraData={updateCounter}
                 renderItem={renderPlayerItem}
                 contentContainerStyle={styles.listContainer}
                 autoscrollThreshold={0.1} // Optimized threshold for better scrolling
                 autoscrollActivationDelta={5} // Reduced activation delta for quicker response
                 autoscrollSpeedScale={3} // Balanced for smoother scrolling
-                animationDuration={50} // Set to 0 for immediate response
+                animationDuration={0} // Set to 0 for immediate response
                 dragEnabled={true}
                 cellAnimations={{
                   opacity: 0.9, // Very subtle opacity change
@@ -278,32 +303,17 @@ const DefaultScreen = () => {
                     { scale: 1.01 }, // Very subtle scale change
                   ],
                 }}
-                itemLayoutAnimation={Layout.springify().withInitialValues({
-                  originX: 0,
-                  originY: 0,
-                })} // Use the Layout object directly
-                // shouldUpdateActiveItem={true}
-                // onScroll={scrollHandler}
-                // onDragStart={handleDragStart}
-                // onDragEnd={handleDragEnd}
-                // Custom cell animations to control opacity and transform (scale)
-                // cellAnimations={{
-                //   // Set to 1 to disable opacity animation, or adjust as needed (0.8-0.95 is subtle)
-                //   opacity: 1,
-                //   // Override the default transform animations
-                //   transform: [
-                //     // Set scale to 1 to completely disable scaling, or use a subtle value
-                //     { scale: 1.03 },
-                //     // Optionally add a slight translation for visual feedback
-                //     // { translateY: -2 },
-                //   ],
-                // }}
+                // itemLayoutAnimation={Layout.springify().withInitialValues({
+                //   originX: 0,
+                //   originY: 0,
+                // })}
+                itemLayoutAnimation={undefined}
               />
             ) : (
               <FlatList
                 data={players}
                 renderItem={renderPlayerItem}
-                extraData={`${updateCounter}-${players.map(p => p.id).join('-')}`}
+                extraData={updateCounter}
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContainer}
               />

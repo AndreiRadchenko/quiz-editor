@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,8 @@ import {
   Pressable,
   Platform,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-  runOnJS,
-  useAnimatedReaction,
-} from 'react-native-reanimated';
-import { useReorderableDrag, useIsActive } from 'react-native-reorderable-list';
+import Animated, { useSharedValue } from 'react-native-reanimated';
+import { useReorderableDrag } from 'react-native-reorderable-list';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { SeatDataType } from '../types';
@@ -23,63 +16,16 @@ import { useAppContext } from '../context/AppContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRelations } from '../hooks/useRelations';
 
-interface PlayerItemProps {
-  item: SeatDataType;
-  role?: string;
-  moveToTop?: (id: number) => void;
-  moveToBottom?: (id: number) => void;
-}
-
-export const PlayerItem = ({
-  item,
-  role,
-  moveToTop,
-  moveToBottom,
-}: PlayerItemProps) => {
-  // Use the hook to enable dragging for reorderable list
-  let drag: () => void = () => {};
-  if (role === 'editor') {
-    drag = useReorderableDrag();
-  }
-
-  // Add shared values for animations
-  const pressed = useSharedValue(false);
-
-  const player = item.player;
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-  const { serverIP } = useAppContext();
-
-  if (!player) return null;
-
-  const playerAnswer = player.currentAnswer || '';
-  const usedPasses =
-    player.usedPassOne && player.usedPassTwo
-      ? 2
-      : player.usedPassOne || player.usedPassTwo
-        ? 1
-        : 0;
-
-  const playerRelationsWithRole =
-    player.relations && player.relations.length > 0
-      ? useRelations(player.relations, role || '')
-      : [];
-
-  // Use player.image if available, otherwise use a placeholder
-  const playerImageSource = player.image
-    ? { uri: `http://${serverIP}:9002/players/${player.image}` }
-    : require('../assets/images/logo.png');
-
-  const styles = StyleSheet.create({
+// Move styles outside component to prevent recreation on every render
+const createStyles = (theme: any) =>
+  StyleSheet.create({
     playerItem: {
       flex: 1,
       backgroundColor: theme.colors.primaryHover,
       borderRadius: theme.borderRadius.md,
       padding: 0,
       marginBottom: theme.spacing.sm,
-      // A simpler approach - just use elevation for Android
       elevation: 3,
-      // For iOS, add a thin border instead of shadow to avoid styling issues
       ...Platform.select({
         ios: {
           borderWidth: 1,
@@ -114,13 +60,9 @@ export const PlayerItem = ({
           shadowOpacity: 0.4,
           shadowRadius: 8,
         },
-        android: {
-          // Android elevation is handled in the animated style
-        },
       }),
     },
     shadowContainer: {
-      // This wrapper ensures we don't have shadow styling issues
       marginBottom: theme.spacing.md,
     },
     pressable: {
@@ -131,19 +73,19 @@ export const PlayerItem = ({
       left: -8,
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 10, // Ensure it's above other elements
+      zIndex: 10,
     },
     dragHandleDot: {
       width: 6,
       height: 6,
       borderRadius: 3,
-      backgroundColor: 'rgba(255, 255, 255, 0.85)', // Brighter for better visibility
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
       margin: 2.5,
     },
     container: {
       paddingVertical: theme.spacing.sm,
       paddingLeft: theme.spacing.sm,
-      paddingRight: theme.spacing['3xl'], // Increased right padding to make room for quick action buttons
+      paddingRight: theme.spacing['3xl'],
       flexDirection: 'row',
       position: 'relative',
     },
@@ -178,12 +120,12 @@ export const PlayerItem = ({
     label: {
       textAlign: 'right',
       color: 'white',
-      width: 90, // Fixed width for labels
+      width: 90,
       fontSize: theme.fontSize.base,
       fontWeight: theme.fontWeight.semibold,
     },
     value: {
-      color: '#FFD700', // Gold color for values
+      color: '#FFD700',
       fontWeight: theme.fontWeight.semibold,
       fontSize: theme.fontSize.lg,
     },
@@ -241,7 +183,7 @@ export const PlayerItem = ({
       marginRight: theme.spacing.xs,
     },
     answer: {
-      color: '#FFD700', // Gold color for answer
+      color: '#FFD700',
       fontWeight: theme.fontWeight.bold,
       fontSize: theme.fontSize.base,
     },
@@ -255,14 +197,14 @@ export const PlayerItem = ({
       zIndex: 5,
       flexDirection: 'column',
       elevation: 5,
-      marginTop: -8, // Adjusted to align with the container
+      marginTop: -8,
       marginBottom: -8,
     },
     quickActionButton: {
       width: 54,
-      height: 62, // Slightly larger for easier tapping
+      height: 62,
       borderRadius: 8,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Darker for better contrast
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'center',
       alignItems: 'center',
       marginVertical: 6,
@@ -277,27 +219,82 @@ export const PlayerItem = ({
     },
     quickActionButtonActive: {
       backgroundColor: 'rgba(0, 120, 255, 0.8)',
-      transform: [{ scale: 0.95 }], // Slight scale effect for feedback
+      transform: [{ scale: 0.95 }],
     },
-    buttonTooltip: {
-      position: 'absolute',
-      right: 50,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      padding: theme.spacing.xs,
-      borderRadius: theme.borderRadius.sm,
-      color: 'white',
-      fontSize: theme.fontSize.sm,
-      opacity: 0,
-      width: 0,
-      height: 0,
-      overflow: 'hidden',
-    },
-    buttonTooltipVisible: {
-      opacity: 1,
-      width: 'auto',
-      height: 'auto',
+    rowContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
     },
   });
+
+interface PlayerItemProps {
+  item: SeatDataType;
+  role?: string;
+  moveToTop?: (id: number) => void;
+  moveToBottom?: (id: number) => void;
+}
+
+const PlayerItem = ({
+  item,
+  role,
+  moveToTop,
+  moveToBottom,
+}: PlayerItemProps) => {
+  // Use the hook to enable dragging for reorderable list
+  let drag: () => void = () => {};
+  if (role === 'editor') {
+    drag = useReorderableDrag();
+  }
+
+  // Add shared values for animations
+  const pressed = useSharedValue(false);
+
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const { serverIP } = useAppContext();
+
+  const player = item.player;
+
+  // FIXED: First call the hook at the component level (not inside useMemo)
+  const safeRelations = Array.isArray(player?.relations)
+    ? player.relations
+    : [];
+  const processedRelations = useRelations(safeRelations, role || '');
+
+  // Then use the processed relations in useMemo
+  const playerRelationsWithRole = useMemo(() => {
+    return safeRelations.length > 0 ? processedRelations : [];
+  }, [safeRelations, processedRelations]);
+
+  // Use player.image if available, otherwise use a placeholder
+  const playerImageSource = useMemo(() => {
+    return player?.image
+      ? { uri: `http://${serverIP}:9002/players/${player.image}` }
+      : require('../assets/images/logo.png');
+  }, [player?.image, serverIP]);
+
+  // Memoize styles to prevent recreation on each render
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  // Memoize handlers to prevent recreation on each render
+  const handleMoveToTop = useCallback(() => {
+    moveToTop && moveToTop(Number(item.id));
+  }, [moveToTop, item.id]);
+
+  const handleMoveToBottom = useCallback(() => {
+    moveToBottom && moveToBottom(Number(item.id));
+  }, [moveToBottom, item.id]);
+
+  if (!player) return null;
+
+  const playerAnswer = player.currentAnswer || '';
+  const usedPasses =
+    player.usedPassOne && player.usedPassTwo
+      ? 2
+      : player.usedPassOne || player.usedPassTwo
+        ? 1
+        : 0;
 
   // Using Animated.View for proper animations during drag
   return (
@@ -341,13 +338,7 @@ export const PlayerItem = ({
           <View style={styles.infoContainer}>
             <View style={styles.topRow}>
               <Text style={styles.playerName}>{player.name}</Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                }}
-              >
+              <View style={styles.rowContainer}>
                 <Text style={styles.label}>
                   {t('playerItem.rankLabel')}{' '}
                   <Text style={styles.value}>{player.rank || ''}</Text>
@@ -402,17 +393,14 @@ export const PlayerItem = ({
           </View>
 
           {/* Quick action buttons for moving item to top/bottom */}
-          {role && ['editor'].includes(role) && (
+          {role && ['editor', 'general'].includes(role) && (
             <View style={styles.quickActionsContainer}>
               <Pressable
                 style={({ pressed }) => [
                   styles.quickActionButton,
                   pressed && styles.quickActionButtonActive,
                 ]}
-                // style={styles.quickActionButton}
-                onPress={() => {
-                  moveToTop && moveToTop(Number(item.id));
-                }}
+                onPress={handleMoveToTop}
                 hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                 pressRetentionOffset={{
                   top: 10,
@@ -420,11 +408,6 @@ export const PlayerItem = ({
                   bottom: 10,
                   left: 10,
                 }}
-                // android_ripple={{
-                //   color: 'rgba(255, 255, 255, 0.3)',
-                //   borderless: true,
-                //   radius: 27,
-                // }}
                 disabled={!moveToTop}
               >
                 <MaterialIcons name="arrow-upward" size={32} color="white" />
@@ -435,9 +418,7 @@ export const PlayerItem = ({
                   styles.quickActionButton,
                   pressed && styles.quickActionButtonActive,
                 ]}
-                onPress={() => {
-                  moveToBottom && moveToBottom(Number(item.id));
-                }}
+                onPress={handleMoveToBottom}
                 hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                 pressRetentionOffset={{
                   top: 10,
@@ -445,18 +426,9 @@ export const PlayerItem = ({
                   bottom: 10,
                   left: 10,
                 }}
-                // android_ripple={{
-                //   color: 'rgba(255, 255, 255, 0.3)',
-                //   borderless: true,
-                //   radius: 24,
-                // }}
                 disabled={!moveToBottom}
               >
-                <MaterialIcons
-                  name="arrow-downward"
-                  size={32} // Slightly larger icon
-                  color="white"
-                />
+                <MaterialIcons name="arrow-downward" size={32} color="white" />
               </Pressable>
             </View>
           )}
@@ -466,4 +438,40 @@ export const PlayerItem = ({
   );
 };
 
-export default PlayerItem;
+// Custom comparison function for React.memo to prevent unnecessary re-renders
+const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
+  // Compare basic props
+  if (
+    prevProps.item.id !== nextProps.item.id ||
+    prevProps.role !== nextProps.role ||
+    prevProps.item.seat !== nextProps.item.seat
+  ) {
+    return false;
+  }
+
+  // Deep compare player data that affects rendering
+  const prevPlayer = prevProps.item.player;
+  const nextPlayer = nextProps.item.player;
+
+  if (!prevPlayer || !nextPlayer) {
+    return prevPlayer === nextPlayer;
+  }
+
+  return (
+    prevPlayer.name === nextPlayer.name &&
+    prevPlayer.rank === nextPlayer.rank &&
+    prevPlayer.isAnswerCorrect === nextPlayer.isAnswerCorrect &&
+    prevPlayer.isAnswerPass === nextPlayer.isAnswerPass &&
+    prevPlayer.isAnswerBoughtOut === nextPlayer.isAnswerBoughtOut &&
+    prevPlayer.currentAnswer === nextPlayer.currentAnswer &&
+    prevPlayer.usedPassOne === nextPlayer.usedPassOne &&
+    prevPlayer.usedPassTwo === nextPlayer.usedPassTwo &&
+    prevPlayer.occupation === nextPlayer.occupation &&
+    prevPlayer.notes === nextPlayer.notes &&
+    prevPlayer.goal === nextPlayer.goal &&
+    prevPlayer.image === nextPlayer.image
+  );
+};
+
+// Export memoized component with custom comparison function
+export default memo(PlayerItem, areEqual);
