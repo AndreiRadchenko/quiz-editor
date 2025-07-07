@@ -26,7 +26,8 @@ type Locale = 'en' | 'uk'; // Explicitly define Locale type
 const AdminScreen = () => {
   // Removed navigation prop, using useNavigation instead
   const { t, i18n } = useTranslation();
-  const { serverIP, locale, role, setServerIP, setLocale, setRole } = useAppContext();
+  const { serverIP, locale, role, setServerIP, setLocale, setRole } =
+    useAppContext();
   const navigation =
     useNavigation<StackNavigationProp<RootStackParamList, 'Admin'>>(); // Added navigation
   const { theme } = useTheme();

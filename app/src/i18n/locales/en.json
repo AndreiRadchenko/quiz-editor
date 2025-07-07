@@ -35,7 +35,7 @@
     "gotIt": "Got it!",
     "currentTierLabel": "Current Tier:",
     "questionLabel": "Question:",
-    "noTierInformation": "No Tier Information",
+    "noTierInformation": "Unknown",
     "stateLabel": "State:",
     "unknownState": "Unknown",
     "incorrectAnswersTitle": "Incorrect Answers",
@@ -80,6 +80,8 @@
     "usedPassesLabel": "Passes:",
     "seatLabel": "Seat:",
     "companyLabel": "Company:",
-    "answerLabel": "Answer:"
+    "answerLabel": "Answer:",
+    "moveToTopTooltip": "Move to top",
+    "moveToBottomTooltip": "Move to bottom"
   }
 }

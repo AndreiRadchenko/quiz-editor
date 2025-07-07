@@ -6,7 +6,7 @@ import { PlayerDataType, PlayerType } from '../types';
 export const usePlayerState = () => {
   const { serverIP } = useAppContext();
 
-  const getPlayersData = ( playerType?: PlayerType) => {
+  const getPlayersData = (playerType?: PlayerType) => {
     const queryKey = ['players', playerType];
 
     return useQuery({
@@ -19,7 +19,9 @@ export const usePlayerState = () => {
         return fetchSeatsData(serverIP, playerType);
       },
       enabled: !!serverIP,
-      // staleTime can be configured here or globally as done in queryClient.ts
+      // enabled: false, // Disable by default, enable manually in components
+      staleTime: Infinity, // Data will not be refetched unless explicitly invalidated
+      gcTime: 60 * 60 * 1000, // Disable garbage collection
     });
   };
 

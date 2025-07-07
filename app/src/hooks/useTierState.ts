@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAppContext } from '../context/AppContext';
 import { fetchTiersData } from '../api';
-import { 
-  TierDataType, 
-  iQuizSate, 
-  AppTierType, 
-  QuestionDataType, 
-  QuestionTypeEnum 
+import {
+  TierDataType,
+  iQuizSate,
+  AppTierType,
+  QuestionDataType,
+  QuestionTypeEnum,
 } from '../types';
 
 // This hook will fetch all tiers and then allow selecting/transforming a specific tier
@@ -16,7 +16,12 @@ export const useTiersData = () => {
 
   const queryKey = ['tiers'];
 
-  const { data: tiersData, isLoading, error, refetch } = useQuery<TierDataType[], Error>({
+  const {
+    data: tiersData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<TierDataType[], Error>({
     queryKey,
     queryFn: () => {
       if (!serverIP) {
