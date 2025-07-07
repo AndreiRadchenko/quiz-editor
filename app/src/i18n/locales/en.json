@@ -35,7 +35,7 @@
     "gotIt": "Got it!",
     "currentTierLabel": "Current Tier:",
     "questionLabel": "Question:",
-    "noTierInformation": "No Tier Information",
+    "noTierInformation": "Unknown",
     "stateLabel": "State:",
     "unknownState": "Unknown",
     "incorrectAnswersTitle": "Incorrect Answers",

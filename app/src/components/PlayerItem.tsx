@@ -393,7 +393,7 @@ const PlayerItem = ({
           </View>
 
           {/* Quick action buttons for moving item to top/bottom */}
-          {role && ['editor', 'general'].includes(role) && (
+          {role && ['editor'].includes(role) && (
             <View style={styles.quickActionsContainer}>
               <Pressable
                 style={({ pressed }) => [
@@ -474,4 +474,5 @@ const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
 };
 
 // Export memoized component with custom comparison function
-export default memo(PlayerItem, areEqual);
+// export default memo(PlayerItem, areEqual);
+export default PlayerItem;

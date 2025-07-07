@@ -76,7 +76,7 @@ export const useWebSocket = () => {
         try {
           // Parse the message data to see what structure we're getting
           const messageReceived = await JSON.parse(event.data as string);
-          console.warn('WebSocket message:', messageReceived);
+          console.warn('WebSocket message:', messageReceived, `from ${role}`);
 
           if (['ANSWER', 'CHECK'].includes(messageReceived.event)) {
             return; // Ignore timer messages
@@ -118,23 +118,28 @@ export const useWebSocket = () => {
                   break;
               }
             }
-          } else if (messageReceived.event === 'UPDATE_PLAYERS') {
+          } else if (
+            messageReceived.event === 'UPDATE_PLAYERS' &&
+            role !== 'editor'
+          ) {
             const updatedState = await fetchQuizState(serverIP);
             setQuizState(updatedState);
             queryClient.resetQueries({
               queryKey: ['players', 'editor'],
             });
-          } else if (messageReceived.event === 'UPDATE_INDEX') {
-            if (role !== 'editor') {
-              queryClient.resetQueries({
-                queryKey: ['players', 'editor'],
-              });
-            }
+          } else if (
+            messageReceived.event === 'UPDATE_INDEX' &&
+            role !== 'editor'
+          ) {
+            queryClient.resetQueries({
+              queryKey: ['players', 'editor'],
+            });
           } else {
             console.warn(
               'WebSocket message format not recognized:',
               messageReceived
             );
+            return;
           }
         } catch (e) {
           console.error('Failed to parse WebSocket message:', e);

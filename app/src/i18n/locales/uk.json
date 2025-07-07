@@ -32,7 +32,7 @@
     "swipeGesturesMessage": "Свайп ліворуч (ТАК) для додавання правильної відповіді\nСвайп праворуч (НІ) для відхилення",
     "gotIt": "Зрозуміло!",
     "currentTierLabel": "Поточний рівень:",
-    "noTierInformation": "Немає інформації про рівень",
+    "noTierInformation": "Невідомо",
     "stateLabel": "Стан:",
     "questionLabel": "Запитання:",
     "unknownState": "Невідомо",
