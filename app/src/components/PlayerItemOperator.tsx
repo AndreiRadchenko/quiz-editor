@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,70 +7,16 @@ import {
   Pressable,
   Platform,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-  runOnJS,
-  useAnimatedReaction,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useReorderableDrag, useIsActive } from 'react-native-reorderable-list';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { SeatDataType } from '../types';
 import { useAppContext } from '../context/AppContext';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useRelations } from '../hooks/useRelations';
 
-interface PlayerItemProps {
-  item: SeatDataType;
-  role?: string;
-  moveToTop?: (id: number) => void;
-  moveToBottom?: (id: number) => void;
-}
-
-export const PlayerItem = ({
-  item,
-  role,
-  moveToTop,
-  moveToBottom,
-}: PlayerItemProps) => {
-  // Use the hook to enable dragging for reorderable list
-  let drag: () => void = () => {};
-  if (role === 'editor') {
-    drag = useReorderableDrag();
-  }
-
-  // Add shared values for animations
-  const pressed = useSharedValue(false);
-
-  const player = item.player;
-  const { theme } = useTheme();
-  const { t } = useTranslation();
-  const { serverIP } = useAppContext();
-
-  if (!player) return null;
-
-  const playerAnswer = player.currentAnswer || '';
-  const usedPasses =
-    player.usedPassOne && player.usedPassTwo
-      ? 2
-      : player.usedPassOne || player.usedPassTwo
-        ? 1
-        : 0;
-
-  const playerRelationsWithRole =
-    player.relations && player.relations.length > 0
-      ? useRelations(player.relations, role || '')
-      : [];
-
-  // Use player.image if available, otherwise use a placeholder
-  const playerImageSource = player.image
-    ? { uri: `http://${serverIP}:9002/players/${player.image}` }
-    : require('../assets/images/logo.png');
-
-  const styles = StyleSheet.create({
+const createStyles = (theme: any) =>
+  StyleSheet.create({
     playerItem: {
       flex: 1,
       backgroundColor: theme.colors.primaryHover,
@@ -101,6 +47,10 @@ export const PlayerItem = ({
     playerItemPass: {
       borderLeftWidth: 4,
       backgroundColor: '#510bf5', // Amber/orange color for pass
+    },
+    playerItemBoughtOut: {
+      borderLeftWidth: 4,
+      backgroundColor: '#b89217', // Amber/orange color for pass
     },
     activeItem: {
       ...Platform.select({
@@ -308,15 +258,49 @@ export const PlayerItem = ({
       height: 'auto',
     },
   });
+interface PlayerItemProps {
+  item: SeatDataType;
+  role?: string;
+  moveToTop?: (id: number) => void;
+  moveToBottom?: (id: number) => void;
+}
+
+export const PlayerItem = ({ item, role }: PlayerItemProps) => {
+  // Use the hook to enable dragging for reorderable list
+  let drag: () => void = () => {};
+  if (role === 'editor') {
+    drag = useReorderableDrag();
+  }
+
+  const player = item.player;
+  const { theme } = useTheme();
+  const { t } = useTranslation();
+  const { serverIP } = useAppContext();
+
+  if (!player) return null;
+
+  const playerRelationsWithRole =
+    player.relations && player.relations.length > 0
+      ? useRelations(player.relations, role || '')
+      : [];
+
+  // Use player.image if available, otherwise use a placeholder
+  const playerImageSource = player.image
+    ? { uri: `http://${serverIP}:9002/players/${player.image}` }
+    : require('../assets/images/logo.png');
+
+  // Memoize styles to prevent recreation on each render
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Using Animated.View for proper animations during drag
   return (
-    <Animated.View
+    <View
       style={[
         styles.playerItem,
         player.isAnswerCorrect === true && styles.playerItemCorrect,
         player.isAnswerCorrect === false && styles.playerItemIncorrect,
         player.isAnswerPass === true && styles.playerItemPass,
+        player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}
     >
       <Pressable style={{ flex: 1 }}>
@@ -359,8 +343,46 @@ export const PlayerItem = ({
           </View>
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 };
 
-export default PlayerItem;
+// Custom comparison function for React.memo to prevent unnecessary re-renders
+const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
+  // Compare basic props
+  if (
+    prevProps.item.id !== nextProps.item.id ||
+    prevProps.role !== nextProps.role ||
+    prevProps.item.seat !== nextProps.item.seat
+  ) {
+    return false;
+  }
+
+  // Deep compare player data that affects rendering
+  const prevPlayer = prevProps.item.player;
+  const nextPlayer = nextProps.item.player;
+
+  if (!prevPlayer || !nextPlayer) {
+    return prevPlayer === nextPlayer;
+  }
+
+  return (
+    prevPlayer.name === nextPlayer.name &&
+    prevPlayer.rank === nextPlayer.rank &&
+    prevPlayer.isAnswerCorrect === nextPlayer.isAnswerCorrect &&
+    prevPlayer.isAnswerPass === nextPlayer.isAnswerPass &&
+    prevPlayer.isAnswerBoughtOut === nextPlayer.isAnswerBoughtOut &&
+    prevPlayer.currentAnswer === nextPlayer.currentAnswer &&
+    prevPlayer.usedPassOne === nextPlayer.usedPassOne &&
+    prevPlayer.usedPassTwo === nextPlayer.usedPassTwo &&
+    prevPlayer.occupation === nextPlayer.occupation &&
+    prevPlayer.notes === nextPlayer.notes &&
+    prevPlayer.goal === nextPlayer.goal &&
+    prevPlayer.image === nextPlayer.image
+  );
+};
+
+// export default PlayerItem;
+// Export memoized component with custom comparison function
+const MemoizedPlayerItem = memo(PlayerItem, areEqual);
+export default MemoizedPlayerItem;

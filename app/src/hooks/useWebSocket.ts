@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { iQuizSate, iCheckMessage, iAnswerState } from '../types';
+import { iQuizSate, iCheckMessage, iAnswerState, PlayerType } from '../types';
 import { fetchQuizState } from '../api';
 import { queryClient } from '../store/queryClient';
+import { useWebSocketContext } from '../context/WebSocketContext';
 export type WebSocketStatus =
   | 'connecting'
   | 'connected'
@@ -16,7 +17,7 @@ export const useWebSocket = () => {
   const { serverIP, role } = useAppContext();
   const [status, setStatus] = useState<WebSocketStatus>('disconnected');
   const [quizState, setQuizState] = useState<iQuizSate | null>(null);
-  // const [answers, setAnswers] = useState<iAnswerState[]>([]);
+  const [showPlayerType, setShowPlayerType] = useState<PlayerType>('editor');
   const [errorDetails, setErrorDetails] = useState<string | null>(null); // Changed to string only
   const webSocketRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -109,12 +110,29 @@ export const useWebSocket = () => {
                 case 'QUESTION_COMPLETE':
                 case 'BUYOUT_COMPLETE':
                   // Invalidate the players editor query to trigger a refetch
+                  setShowPlayerType('editor');
                   queryClient.resetQueries({
                     queryKey: ['players', 'editor'],
                   });
                   break;
                 case 'QUESTION_PRE':
                 case 'IDLE':
+                  setShowPlayerType(undefined);
+                  queryClient.resetQueries({
+                    queryKey: ['players'],
+                  });
+                  break;
+                case 'QUESTION_OPEN':
+                case 'BUYOUT_OPEN':
+                case 'QUESTION_CLOSED':
+                  // setShowPlayerType(undefined);
+                  // queryClient.removeQueries({
+                  //   queryKey: ['players'],
+                  // });
+                  // setShowPlayerType(undefined);
+                  // queryClient.resetQueries({
+                  //   queryKey: ['players'],
+                  // });
                   break;
               }
             }
@@ -133,6 +151,11 @@ export const useWebSocket = () => {
           ) {
             queryClient.resetQueries({
               queryKey: ['players', 'editor'],
+            });
+          } else if (messageReceived.event === 'PLAYERS_TYPE') {
+            setShowPlayerType(messageReceived.payload.type);
+            queryClient.resetQueries({
+              queryKey: ['players', messageReceived.payload.type],
             });
           } else {
             console.warn(
@@ -274,6 +297,8 @@ export const useWebSocket = () => {
     status,
     quizState,
     setQuizState,
+    showPlayerType,
+    setShowPlayerType,
     errorDetails,
     sendMessage,
     connectWebSocket: connect,

@@ -2,24 +2,26 @@ import React, {
   useCallback,
   useEffect,
   useState,
-  useMemo,
   useRef,
-  use,
+  RefObject,
 } from 'react';
-// import 'react-native-get-random-values';
-// import { v4 as uuidv4 } from 'uuid';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import Animated, {
-  useAnimatedScrollHandler,
-  LayoutAnimationConfig,
-  Layout,
   LinearTransition,
+  runOnJS,
+  useAnimatedScrollHandler,
+  useSharedValue,
 } from 'react-native-reanimated';
-// import { Gesture } from 'react-native-gesture-handler';
 import ReorderableList, {
   ReorderableListReorderEvent,
   reorderItems,
-  useReorderableDrag,
 } from 'react-native-reorderable-list';
 import { useTranslation } from 'react-i18next';
 import { useWebSocketContext } from '../context/WebSocketContext';
@@ -27,57 +29,86 @@ import { useTheme } from '../theme';
 import { ConnectionStatus } from '../components/ConnectionStatus';
 import { QuizHeader } from '../components/QuizHeader';
 import { useAppContext } from '../context/AppContext';
-// import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import { usePlayerState } from '../hooks/usePlayerState';
 import { SeatDataType } from '../types';
-import PlayerItem from '../components/PlayerItem';
-import { memo } from 'react';
+import { PlayerItem, MemoizedPlayerItem } from '../components/PlayerItem';
 import PlayerItemOperator from '../components/PlayerItemOperator';
 import { updateSeatEditorIndex } from '../api';
-import SimplePlayerItem from '../components/simplePlayerItem';
-import { queryClient } from '../store/queryClient';
 import PlayerItemSkeleton from '../components/PlayerItemSkeleton';
-
-// const MemoizedPlayerItem = memo(SimplePlayerItem);
-const MemoizedPlayerItemOperator = memo(PlayerItemOperator);
+import ScrollToTopButton from '../components/ScrollToTopButton';
 
 const DefaultScreen = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
   const { role, serverIP } = useAppContext();
-  const { quizState } = useWebSocketContext();
+  const { quizState, playersQuery } = useWebSocketContext();
   const [players, setPlayers] = useState<SeatDataType[]>([]);
   const [updateCounter, setUpdateCounter] = useState(0);
-  const isPreparing = useRef(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const listRef = useRef<any>(null);
+  const scrollY = useSharedValue(0);
 
   // Use the player state hook to fetch players data
-  const { getPlayersData } = usePlayerState();
-  const { data: playersData, isLoading: playersLoading } =
-    getPlayersData('editor');
+  const { data: playersData, isLoading: playersLoading } = playersQuery;
 
   // When playersData changes, update our local state
   useEffect(() => {
-    isPreparing.current = true; // Set preparing state to true
+    // isPreparing.current = true; // Set preparing state to true
     if (playersData) {
       const playersList = Array.isArray(playersData)
         ? playersData
         : [playersData];
       if (
         quizState?.state &&
-        ['QUESTION_COMPLETE', 'BUYOUT_COMPLETE'].includes(quizState.state)
+        [
+          'QUESTION_PRE',
+          'IDLE',
+          'QUESTION_OPEN',
+          'QUESTION_CLOSED',
+          'BUYOUT_OPEN',
+          'QUESTION_COMPLETE',
+          'BUYOUT_COMPLETE',
+        ].includes(quizState.state)
       ) {
         setPlayers(playersList);
-      } else if (
-        quizState?.state &&
-        ['QUESTION_PRE', 'IDLE'].includes(quizState.state)
-      ) {
-        setPlayers([]);
       }
     }
     setTimeout(() => {
-      isPreparing.current = false; // Reset preparing state after processing
+      // isPreparing.current = false; // Reset preparing state after processing
     }, 0); // Use setTimeout to ensure state update happens after current render
   }, [playersData, quizState?.state]);
+
+  // Replace your handleScroll with useAnimatedScrollHandler for ReorderableList
+  const animatedScrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      scrollY.value = event.contentOffset.y;
+      // Update React state from worklet context using runOnJS
+      if (event.contentOffset.y > 100 && !showScrollButton) {
+        runOnJS(setShowScrollButton)(true);
+      } else if (event.contentOffset.y <= 100 && showScrollButton) {
+        runOnJS(setShowScrollButton)(false);
+      }
+    },
+  });
+
+  // Keep the original handleScroll for FlatList components
+  const handleScroll = useCallback(
+    (event: { nativeEvent: { contentOffset: { y: any } } }) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      setShowScrollButton(offsetY > 100);
+    },
+    []
+  );
+
+  // Function to scroll back to top
+  const scrollToTop = useCallback(() => {
+    if (listRef.current) {
+      if (typeof listRef.current.scrollToOffset === 'function') {
+        listRef.current.scrollToOffset({ offset: 0, animated: true });
+      } else if (typeof listRef.current.scrollToIndex === 'function') {
+        listRef.current.scrollToIndex({ index: 0, animated: true });
+      }
+    }
+  }, []);
 
   // Function to handle player reordering (only for editors)
   const handlePlayersReorder = useCallback(
@@ -92,19 +123,22 @@ const DefaultScreen = () => {
     []
   );
 
-  const moveToTop = (id: number) => {
-    const playerIndex = players.findIndex(
-      player => Number(player.id) === Number(id)
-    );
-    if (playerIndex <= 0) {
-      return;
-    }
-    const playerToMove = players[playerIndex];
-    const newData = reorderItems(players, playerIndex, 0);
-    setPlayers(newData);
-    setUpdateCounter(prev => prev + 1);
-    updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
-  };
+  const moveToTop = useCallback(
+    (id: number) => {
+      const playerIndex = players.findIndex(
+        player => Number(player.id) === Number(id)
+      );
+      if (playerIndex <= 0) {
+        return;
+      }
+      const playerToMove = players[playerIndex];
+      const newData = reorderItems(players, playerIndex, 0);
+      setPlayers(newData);
+      setUpdateCounter(prev => prev + 1);
+      updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
+    },
+    [players, serverIP]
+  );
 
   const moveToBottom = useCallback(
     (id: number) => {
@@ -127,7 +161,7 @@ const DefaultScreen = () => {
     ({ item }: { item: SeatDataType }) => {
       if (role === 'operator') {
         return (
-          <MemoizedPlayerItemOperator
+          <PlayerItemOperator
             item={item}
             role={role}
             moveToTop={moveToTop}
@@ -135,8 +169,15 @@ const DefaultScreen = () => {
           />
         );
       } else {
-        return (
+        return role === 'editor' ? (
           <PlayerItem
+            item={item}
+            role={role}
+            moveToTop={moveToTop}
+            moveToBottom={moveToBottom}
+          />
+        ) : (
+          <MemoizedPlayerItem
             item={item}
             role={role}
             moveToTop={moveToTop}
@@ -145,31 +186,8 @@ const DefaultScreen = () => {
         );
       }
     },
-    [role, moveToTop, moveToBottom, players]
+    [role, moveToTop, moveToBottom]
   );
-  // // Create an animated scroll handler for smooth scrolling
-  // const scrollHandler = useAnimatedScrollHandler({
-  //   onScroll: () => {
-  //     // Additional scroll animations can be added here if needed
-  //   },
-  // });
-
-  // // Drag start handler (worklet function)
-  // const handleDragStart = useCallback((event: { index: number }) => {
-  //   'worklet';
-  //   console.log('Drag started at index:', event.index);
-  // }, []);
-
-  // // Drag end handler (worklet function) - more detailed logging and feedback
-  // const handleDragEnd = useCallback((event: { from: number; to: number }) => {
-  //   'worklet';
-
-  //   if (event.from !== event.to) {
-  //     console.log(`Player moved from position ${event.from} to ${event.to}`);
-  //   } else {
-  //     console.log('Player position unchanged');
-  //   }
-  // }, []);
 
   // Function to generate skeleton items
   const getSkeletonData = useCallback(() => {
@@ -221,6 +239,10 @@ const DefaultScreen = () => {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    scrollTopButton: {
+      bottom: 0, // Position above the ConnectionStatus
+      right: 20,
+    },
   });
 
   return (
@@ -245,17 +267,20 @@ const DefaultScreen = () => {
       <View style={styles.content}>
         <View style={styles.section}>
           {/* Players content */}
-          {playersLoading && isPreparing.current ? (
+          {playersLoading ? (
             // Skeleton loader when loading
             <FlatList
+              ref={listRef}
+              onScroll={handleScroll}
               data={getSkeletonData()}
               renderItem={() => <PlayerItemSkeleton />}
-              keyExtractor={item => item.id.toString()}
               contentContainerStyle={styles.listContainer}
             />
           ) : players.length > 0 ? (
             role === 'editor' ? (
               <ReorderableList
+                ref={listRef}
+                onScroll={animatedScrollHandler} // Use the animated handler
                 data={players}
                 onReorder={({ from, to }: ReorderableListReorderEvent) => {
                   console.log(`Reordering from ${from} to ${to}`);
@@ -280,6 +305,9 @@ const DefaultScreen = () => {
               />
             ) : (
               <Animated.FlatList
+                ref={listRef}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
                 data={players}
                 renderItem={renderPlayerItem}
                 extraData={updateCounter}
@@ -293,6 +321,13 @@ const DefaultScreen = () => {
               {t('defaultScreen.noPlayersFound')}
             </Text>
           )}
+
+          {/* Scroll to Top Button */}
+          <ScrollToTopButton
+            visible={showScrollButton}
+            onPress={scrollToTop}
+            style={styles.scrollTopButton}
+          />
         </View>
       </View>
 

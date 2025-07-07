@@ -15,6 +15,7 @@ import { SeatDataType } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRelations } from '../hooks/useRelations';
+import { useWebSocketContext } from '../context/WebSocketContext';
 
 // Move styles outside component to prevent recreation on every render
 const createStyles = (theme: any) =>
@@ -235,7 +236,7 @@ interface PlayerItemProps {
   moveToBottom?: (id: number) => void;
 }
 
-const PlayerItem = ({
+export const PlayerItem = ({
   item,
   role,
   moveToTop,
@@ -253,7 +254,7 @@ const PlayerItem = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { serverIP } = useAppContext();
-
+  const { quizState } = useWebSocketContext();
   const player = item.player;
 
   // FIXED: First call the hook at the component level (not inside useMemo)
@@ -266,6 +267,7 @@ const PlayerItem = ({
   const playerRelationsWithRole = useMemo(() => {
     return safeRelations.length > 0 ? processedRelations : [];
   }, [safeRelations, processedRelations]);
+  // const playerRelationsWithRole = processedRelations;
 
   // Use player.image if available, otherwise use a placeholder
   const playerImageSource = useMemo(() => {
@@ -319,7 +321,13 @@ const PlayerItem = ({
           pressed.value = false;
         }}
         delayLongPress={200}
-        disabled={role !== 'editor'}
+        disabled={
+          role !== 'editor' ||
+          (quizState?.state &&
+            !['QUESTION_COMPLETE', 'BUYOUT_COMPLETE'].includes(
+              quizState?.state
+            ))
+        }
       >
         <View style={styles.container}>
           {/* Drag handle indicator (visible only for editors) */}
@@ -393,45 +401,54 @@ const PlayerItem = ({
           </View>
 
           {/* Quick action buttons for moving item to top/bottom */}
-          {role && ['editor'].includes(role) && (
-            <View style={styles.quickActionsContainer}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.quickActionButton,
-                  pressed && styles.quickActionButtonActive,
-                ]}
-                onPress={handleMoveToTop}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                pressRetentionOffset={{
-                  top: 10,
-                  right: 10,
-                  bottom: 10,
-                  left: 10,
-                }}
-                disabled={!moveToTop}
-              >
-                <MaterialIcons name="arrow-upward" size={32} color="white" />
-              </Pressable>
+          {role &&
+            ['editor'].includes(role) &&
+            quizState?.state &&
+            ['QUESTION_COMPLETE', 'BUYOUT_COMPLETE'].includes(
+              quizState?.state
+            ) && (
+              <View style={styles.quickActionsContainer}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionButton,
+                    pressed && styles.quickActionButtonActive,
+                  ]}
+                  onPress={handleMoveToTop}
+                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  pressRetentionOffset={{
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10,
+                  }}
+                  disabled={!moveToTop}
+                >
+                  <MaterialIcons name="arrow-upward" size={32} color="white" />
+                </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.quickActionButton,
-                  pressed && styles.quickActionButtonActive,
-                ]}
-                onPress={handleMoveToBottom}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                pressRetentionOffset={{
-                  top: 10,
-                  right: 10,
-                  bottom: 10,
-                  left: 10,
-                }}
-                disabled={!moveToBottom}
-              >
-                <MaterialIcons name="arrow-downward" size={32} color="white" />
-              </Pressable>
-            </View>
-          )}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.quickActionButton,
+                    pressed && styles.quickActionButtonActive,
+                  ]}
+                  onPress={handleMoveToBottom}
+                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  pressRetentionOffset={{
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10,
+                  }}
+                  disabled={!moveToBottom}
+                >
+                  <MaterialIcons
+                    name="arrow-downward"
+                    size={32}
+                    color="white"
+                  />
+                </Pressable>
+              </View>
+            )}
         </View>
       </Pressable>
     </Animated.View>
@@ -474,5 +491,4 @@ const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
 };
 
 // Export memoized component with custom comparison function
-// export default memo(PlayerItem, areEqual);
-export default PlayerItem;
+export const MemoizedPlayerItem = memo(PlayerItem, areEqual);

@@ -1,29 +1,29 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAppContext } from '../context/AppContext';
-import { fetchPlayerData, fetchSeatsData } from '../api';
-import { PlayerDataType, PlayerType } from '../types';
+import { fetchSeatsData } from '../api';
+import { PlayerType } from '../types';
 
-export const usePlayerState = () => {
+export const usePlayerState = (playerType?: PlayerType) => {
   const { serverIP } = useAppContext();
+  // const { showPlayerType: contextPlayerType } = useWebSocketContext();
 
-  const getPlayersData = (playerType?: PlayerType) => {
-    const queryKey = ['players', playerType];
+  // Use provided playerType or fall back to context
+  // const queryPlayerType = playerType || (contextPlayerType as PlayerType);
+  console.log(`usePlayerState called with playerType: ${playerType}`);
 
-    return useQuery({
-      queryKey,
-      queryFn: () => {
-        if (!serverIP) {
-          // Should not happen if enabled is set correctly, but as a safeguard
-          return Promise.resolve(null);
-        }
-        return fetchSeatsData(serverIP, playerType);
-      },
-      enabled: !!serverIP,
-      // enabled: false, // Disable by default, enable manually in components
-      staleTime: Infinity, // Data will not be refetched unless explicitly invalidated
-      gcTime: 60 * 60 * 1000, // Disable garbage collection
-    });
-  };
+  // Call useQuery directly at the top level - this is correct usage
+  const playersQuery = useQuery({
+    queryKey: ['players', playerType],
+    queryFn: () => {
+      if (!serverIP) {
+        return Promise.resolve(null);
+      }
+      return fetchSeatsData(serverIP, playerType);
+    },
+    enabled: !!serverIP,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  });
 
-  return { getPlayersData };
+  return playersQuery; // Return the query result directly
 };

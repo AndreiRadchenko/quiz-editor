@@ -3,6 +3,7 @@ import { usePlayerState } from './usePlayerState';
 import { View, Text } from 'react-native';
 import React, { JSX } from 'react';
 import { useTheme } from '../theme';
+import { useWebSocketContext } from '../context/WebSocketContext';
 
 export const useRelations = (
   relations: string[],
@@ -10,8 +11,8 @@ export const useRelations = (
 ): JSX.Element[] | undefined => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const { getPlayersData } = usePlayerState();
-  const { data: playersData, isLoading: playersLoading } = getPlayersData();
+  const { quizState, playersQuery } = useWebSocketContext();
+  const { data: playersData, isLoading: playersLoading } = playersQuery;
 
   if (role === 'editor' || role === 'general') {
     return relations.map((relation, index) => {

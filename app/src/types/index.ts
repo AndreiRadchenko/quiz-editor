@@ -18,7 +18,9 @@ export type BroadcastState =
   | 'IDLE'
   | 'BUYOUT_OPEN'
   | 'BUYOUT_COMPLETE'
-  | 'UPDATE_PLAYERS';
+  | 'UPDATE_PLAYERS'
+  | 'UPDATE_INDEX'
+  | 'PLAYERS_TYPE';
 
 // Payload for most WebSocket events
 export interface iQuizSate {

@@ -5,21 +5,23 @@ import React, {
   useEffect,
 } from 'react';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { iQuizSate, iCheckMessage, iAnswerState } from '../types';
+import { iQuizSate, iCheckMessage, iAnswerState, PlayerType } from '../types';
 import { WebSocketStatus } from '../hooks/useWebSocket';
 import { useAppContext } from './AppContext';
 import { fetchQuizState } from '../api';
+import { usePlayerState } from '../hooks/usePlayerState';
 
 interface WebSocketContextType {
+  quizState: iQuizSate | null;
+  setQuizState: React.Dispatch<React.SetStateAction<iQuizSate | null>>;
   answers: iAnswerState[];
   setAnswers: React.Dispatch<React.SetStateAction<iAnswerState[]>>;
   status: WebSocketStatus;
-  quizState: iQuizSate | null;
-  setQuizState: React.Dispatch<React.SetStateAction<iQuizSate | null>>;
   errorDetails: string | null;
   sendMessage: (message: iCheckMessage | iAnswerState) => void;
   connectWebSocket: () => void;
   disconnectWebSocket: () => void;
+  playersQuery: ReturnType<typeof usePlayerState>;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -28,7 +30,10 @@ export const WebSocketProvider: React.FC<{ children: ReactElement }> = ({
   children,
 }) => {
   const { serverIP } = useAppContext();
+  const [answers, setAnswers] = React.useState<iAnswerState[]>([]);
   const webSocketState = useWebSocket();
+  const playersQuery = usePlayerState(webSocketState.showPlayerType);
+
   useEffect(() => {
     const initializeWebSocket = async () => {
       // Log the initial state for debugging
@@ -44,7 +49,14 @@ export const WebSocketProvider: React.FC<{ children: ReactElement }> = ({
   }, []);
 
   return (
-    <WebSocketContext.Provider value={webSocketState}>
+    <WebSocketContext.Provider
+      value={{
+        ...webSocketState,
+        answers,
+        setAnswers,
+        playersQuery,
+      }}
+    >
       {children}
     </WebSocketContext.Provider>
   );
