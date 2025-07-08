@@ -474,20 +474,19 @@ const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
     return prevPlayer === nextPlayer;
   }
 
-  return (
-    prevPlayer.name === nextPlayer.name &&
-    prevPlayer.rank === nextPlayer.rank &&
-    prevPlayer.isAnswerCorrect === nextPlayer.isAnswerCorrect &&
-    prevPlayer.isAnswerPass === nextPlayer.isAnswerPass &&
-    prevPlayer.isAnswerBoughtOut === nextPlayer.isAnswerBoughtOut &&
-    prevPlayer.currentAnswer === nextPlayer.currentAnswer &&
-    prevPlayer.usedPassOne === nextPlayer.usedPassOne &&
-    prevPlayer.usedPassTwo === nextPlayer.usedPassTwo &&
-    prevPlayer.occupation === nextPlayer.occupation &&
-    prevPlayer.notes === nextPlayer.notes &&
-    prevPlayer.goal === nextPlayer.goal &&
-    prevPlayer.image === nextPlayer.image
-  );
+  return true;
+  // prevPlayer.name === nextPlayer.name &&
+  // prevPlayer.rank === nextPlayer.rank &&
+  // prevPlayer.isAnswerCorrect === nextPlayer.isAnswerCorrect &&
+  // prevPlayer.isAnswerPass === nextPlayer.isAnswerPass &&
+  // prevPlayer.isAnswerBoughtOut === nextPlayer.isAnswerBoughtOut &&
+  // prevPlayer.currentAnswer === nextPlayer.currentAnswer &&
+  // prevPlayer.usedPassOne === nextPlayer.usedPassOne &&
+  // prevPlayer.usedPassTwo === nextPlayer.usedPassTwo &&
+  // prevPlayer.occupation === nextPlayer.occupation &&
+  // prevPlayer.notes === nextPlayer.notes &&
+  // prevPlayer.goal === nextPlayer.goal &&
+  // prevPlayer.image === nextPlayer.image
 };
 
 // Export memoized component with custom comparison function

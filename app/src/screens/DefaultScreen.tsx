@@ -49,10 +49,11 @@ const DefaultScreen = () => {
 
   // Use the player state hook to fetch players data
   const { data: playersData, isLoading: playersLoading } = playersQuery;
+  const isPreparing = useRef(false);
 
   // When playersData changes, update our local state
   useEffect(() => {
-    // isPreparing.current = true; // Set preparing state to true
+    isPreparing.current = true; // Set preparing state to true
     if (playersData) {
       const playersList = Array.isArray(playersData)
         ? playersData
@@ -73,8 +74,8 @@ const DefaultScreen = () => {
       }
     }
     setTimeout(() => {
-      // isPreparing.current = false; // Reset preparing state after processing
-    }, 0); // Use setTimeout to ensure state update happens after current render
+      isPreparing.current = false; // Reset preparing state after processing
+    }, 50); // Use setTimeout to ensure state update happens after current render
   }, [playersData, quizState?.state]);
 
   // Replace your handleScroll with useAnimatedScrollHandler for ReorderableList
@@ -240,8 +241,9 @@ const DefaultScreen = () => {
       justifyContent: 'center',
     },
     scrollTopButton: {
-      bottom: 0, // Position above the ConnectionStatus
-      right: 20,
+      bottom: -theme.spacing.xl, // Position above the ConnectionStatus
+      // right: theme.spacing['3xl'],
+      // right: 0,
     },
   });
 
@@ -267,7 +269,7 @@ const DefaultScreen = () => {
       <View style={styles.content}>
         <View style={styles.section}>
           {/* Players content */}
-          {playersLoading ? (
+          {playersLoading && isPreparing.current ? (
             // Skeleton loader when loading
             <FlatList
               ref={listRef}
@@ -278,6 +280,7 @@ const DefaultScreen = () => {
             />
           ) : players.length > 0 ? (
             role === 'editor' ? (
+              // true ? (
               <ReorderableList
                 ref={listRef}
                 onScroll={animatedScrollHandler} // Use the animated handler
