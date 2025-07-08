@@ -14,8 +14,8 @@ import { useTheme } from '../theme';
 import { SeatDataType } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRelations } from '../hooks/useRelations';
 import { useWebSocketContext } from '../context/WebSocketContext';
+import RelationsDisplay from '../components/RelationsDisplay';
 
 // Move styles outside component to prevent recreation on every render
 const createStyles = (theme: any) =>
@@ -254,20 +254,13 @@ export const PlayerItem = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { serverIP } = useAppContext();
-  const { quizState } = useWebSocketContext();
+  const { quizState, playersQuery } = useWebSocketContext();
   const player = item.player;
 
-  // FIXED: First call the hook at the component level (not inside useMemo)
+  // Ensure relations is an array
   const safeRelations = Array.isArray(player?.relations)
     ? player.relations
     : [];
-  const processedRelations = useRelations(safeRelations, role || '');
-
-  // Then use the processed relations in useMemo
-  const playerRelationsWithRole = useMemo(() => {
-    return safeRelations.length > 0 ? processedRelations : [];
-  }, [safeRelations, processedRelations]);
-  // const playerRelationsWithRole = processedRelations;
 
   // Use player.image if available, otherwise use a placeholder
   const playerImageSource = useMemo(() => {
@@ -384,19 +377,21 @@ export const PlayerItem = ({
                 )}
               </View>
 
-              {playerRelationsWithRole &&
-                playerRelationsWithRole.length > 0 && (
-                  <View style={styles.companyContainer}>
-                    <Text style={styles.answerLabel}>
-                      {t('playerItem.companyLabel')}
-                    </Text>
-                    <View style={styles.relationList}>
-                      {playerRelationsWithRole.map(
-                        (relation, index) => relation
-                      )}
-                    </View>
+              {safeRelations && safeRelations.length > 0 && (
+                <View style={styles.companyContainer}>
+                  <Text style={styles.answerLabel}>
+                    {t('playerItem.companyLabel')}
+                  </Text>
+                  <View style={styles.relationList}>
+                    <RelationsDisplay
+                      relations={safeRelations}
+                      role={role || 'general'}
+                      playersData={playersQuery.data || []}
+                      isLoading={playersQuery.isLoading}
+                    />
                   </View>
-                )}
+                </View>
+              )}
             </View>
           </View>
 
