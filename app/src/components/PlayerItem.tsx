@@ -258,9 +258,10 @@ export const PlayerItem = ({
   const player = item.player;
 
   // Ensure relations is an array
-  const safeRelations = Array.isArray(player?.relations)
-    ? player.relations
-    : [];
+  const safeRelations =
+    Array.isArray(player?.relations) && player.relations[0] !== ''
+      ? player.relations
+      : [];
 
   // Use player.image if available, otherwise use a placeholder
   const playerImageSource = useMemo(() => {

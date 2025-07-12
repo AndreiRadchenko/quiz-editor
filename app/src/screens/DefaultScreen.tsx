@@ -178,7 +178,7 @@ const DefaultScreen = () => {
             moveToBottom={moveToBottom}
           />
         ) : (
-          <MemoizedPlayerItem
+          <PlayerItem
             item={item}
             role={role}
             moveToTop={moveToTop}

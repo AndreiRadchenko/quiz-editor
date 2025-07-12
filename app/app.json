@@ -28,18 +28,18 @@
     ],
     "name": "Quiz Editor",
     "slug": "quizEditor",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/logo-square-01.png",
+    "icon": "./assets/logo-square-02.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "backgroundColor": "#1a1a1a",
     "splash": {
-      "image": "./assets/logo-square-01.png",
+      "image": "./assets/logo-square-02.png",
       "resizeMode": "cover",
       "backgroundColor": "#1a1a1a",
       "dark": {
-        "image": "./assets/logo-square-01.png",
+        "image": "./assets/logo-square-02.png",
         "resizeMode": "cover",
         "backgroundColor": "#1a1a1a"
       }
@@ -62,27 +62,27 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo-square-01.png",
+        "foregroundImage": "./assets/logo-square-02.png",
         "backgroundColor": "#1a1a1a"
       },
       "backgroundColor": "#1a1a1a",
       "splash": {
-        "image": "./assets/logo-square-01.png",
+        "image": "./assets/logo-square-02.png",
         "resizeMode": "cover",
         "backgroundColor": "#1a1a1a",
         "dark": {
-          "image": "./assets/logo-square-01.png",
+          "image": "./assets/logo-square-02.png",
           "resizeMode": "cover",
           "backgroundColor": "#1a1a1a"
         }
       },
       "package": "com.andriiradchenko.quizEditor",
-      "versionCode": 8,
+      "versionCode": 10,
       "enableProguardInReleaseBuilds": true,
       "enableSeparateBuildPerCPUArchitecture": true
     },
     "web": {
-      "favicon": "./assets/logo-square-01.png",
+      "favicon": "./assets/logo-square-02.png",
       "backgroundColor": "#1a1a1a"
     },
     "extra": {

@@ -382,7 +382,5 @@ const areEqual = (prevProps: PlayerItemProps, nextProps: PlayerItemProps) => {
   );
 };
 
-// export default PlayerItem;
-// Export memoized component with custom comparison function
-const MemoizedPlayerItem = memo(PlayerItem, areEqual);
-export default MemoizedPlayerItem;
+// const MemoizedPlayerItem = memo(PlayerItem, areEqual);
+export default PlayerItem;
