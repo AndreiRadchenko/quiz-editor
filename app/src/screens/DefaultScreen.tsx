@@ -4,6 +4,7 @@ import React, {
   useState,
   useRef,
   RefObject,
+  useMemo,
 } from 'react';
 import {
   View,
@@ -19,6 +20,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
+import { throttle } from 'lodash';
 import ReorderableList, {
   ReorderableListReorderEvent,
   reorderItems,
@@ -78,18 +80,35 @@ const DefaultScreen = () => {
     }, 50); // Use setTimeout to ensure state update happens after current render
   }, [playersData, quizState?.state]);
 
+  const throttledSetVisibility = useMemo(
+    () =>
+      throttle(
+        (currentOffset: number) => {
+          setShowScrollButton(currentOffset > 100);
+        },
+        200, // The throttle interval in milliseconds.
+        { leading: true, trailing: true } // Options to ensure responsiveness.
+      ),
+    []
+  );
   // Replace your handleScroll with useAnimatedScrollHandler for ReorderableList
   const animatedScrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       scrollY.value = event.contentOffset.y;
-      // Update React state from worklet context using runOnJS
-      if (event.contentOffset.y > 100 && !showScrollButton) {
-        runOnJS(setShowScrollButton)(true);
-      } else if (event.contentOffset.y <= 100 && showScrollButton) {
-        runOnJS(setShowScrollButton)(false);
-      }
+      runOnJS(throttledSetVisibility)(event.contentOffset.y);
     },
   });
+  // const animatedScrollHandler = useAnimatedScrollHandler({
+  //   onScroll: event => {
+  //     scrollY.value = event.contentOffset.y;
+  //     // Update React state from worklet context using runOnJS
+  //     if (event.contentOffset.y > 100 && !showScrollButton) {
+  //       runOnJS(setShowScrollButton)(true);
+  //     } else if (event.contentOffset.y <= 100 && showScrollButton) {
+  //       runOnJS(setShowScrollButton)(false);
+  //     }
+  //   },
+  // });
 
   // Keep the original handleScroll for FlatList components
   const handleScroll = useCallback(
@@ -140,6 +159,52 @@ const DefaultScreen = () => {
     },
     [players, serverIP]
   );
+  //   (id: number) => {
+  //     // 1. Capture the current scroll position and find the item's index.
+  //     const currentScrollY = scrollY.value;
+  //     const playerIndex = players.findIndex(
+  //       player => Number(player.id) === Number(id)
+  //     );
+
+  //     if (playerIndex <= 0) {
+  //       return;
+  //     }
+
+  //     // 2. Determine if this is a "long-distance" move.
+  //     // If the item is more than 20 positions down, we'll use the stable "scroll to top" behavior.
+  //     const isLongDistanceMove = playerIndex > 20;
+
+  //     // 3. Update data state, which triggers the re-render and animations.
+  //     const playerToMove = players[playerIndex];
+  //     const newData = reorderItems(players, playerIndex, 0);
+  //     setPlayers(newData);
+  //     setUpdateCounter(prev => prev + 1);
+  //     updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
+
+  //     // 4. After a delay for animations to settle, apply the correct scroll logic.
+  //     setTimeout(() => {
+  //       if (listRef.current) {
+  //         if (isLongDistanceMove) {
+  //           // --- STABLE BEHAVIOR FOR LONG MOVES ---
+  //           // For items moved from far away, we execute the one command we know works:
+  //           // scroll to the top. This avoids the unstable state restoration entirely.
+  //           listRef.current.scrollToOffset?.({
+  //             offset: 0,
+  //             animated: true,
+  //           });
+  //         } else {
+  //           // --- PRESERVE POSITION FOR SHORT MOVES ---
+  //           // For items already near the top, restoring the position is safe.
+  //           listRef.current.scrollToOffset?.({
+  //             offset: currentScrollY,
+  //             animated: false,
+  //           });
+  //         }
+  //       }
+  //     }, 0); // This timeout should be similar to your `animationDuration` (200ms).
+  //   },
+  //   [players, serverIP, scrollY]
+  // );
 
   const moveToBottom = useCallback(
     (id: number) => {
@@ -305,6 +370,8 @@ const DefaultScreen = () => {
                   transform: [{ scale: 1.01 }],
                 }}
                 itemLayoutAnimation={LinearTransition}
+                initialNumToRender={players.length}
+                windowSize={players.length}
               />
             ) : (
               <Animated.FlatList
