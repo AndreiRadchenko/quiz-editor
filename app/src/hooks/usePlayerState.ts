@@ -5,13 +5,6 @@ import { PlayerType } from '../types';
 
 export const usePlayerState = (playerType?: PlayerType) => {
   const { serverIP } = useAppContext();
-  // const { showPlayerType: contextPlayerType } = useWebSocketContext();
-
-  // Use provided playerType or fall back to context
-  // const queryPlayerType = playerType || (contextPlayerType as PlayerType);
-  console.log(`usePlayerState called with playerType: ${playerType}`);
-
-  // Call useQuery directly at the top level - this is correct usage
   const playersQuery = useQuery({
     queryKey: ['players', playerType],
     queryFn: () => {
@@ -25,5 +18,5 @@ export const usePlayerState = (playerType?: PlayerType) => {
     gcTime: 60 * 60 * 1000,
   });
 
-  return playersQuery; // Return the query result directly
+  return playersQuery;
 };

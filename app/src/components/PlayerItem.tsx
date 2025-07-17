@@ -24,7 +24,8 @@ const createStyles = (theme: any) =>
   StyleSheet.create({
     playerItem: {
       flex: 1,
-      backgroundColor: theme.colors.primaryHover,
+      opacity: 0.65,
+      backgroundColor: theme.colors.muted,
       borderRadius: theme.borderRadius.md,
       padding: 0,
       marginBottom: theme.spacing.sm,
@@ -39,21 +40,31 @@ const createStyles = (theme: any) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
+
+    playerItemActive: {
+      borderLeftWidth: 4,
+      backgroundColor: theme.colors.primaryHover,
+      opacity: 1,
+    },
     playerItemCorrect: {
       borderLeftWidth: 4,
       backgroundColor: '#1c6d1f', // Green
+      opacity: 1,
     },
     playerItemIncorrect: {
       borderLeftWidth: 4,
       backgroundColor: '#8b0d0d', // Red
+      opacity: 1,
     },
     playerItemPass: {
       borderLeftWidth: 4,
       backgroundColor: '#510bf5', // Amber/orange color for pass
+      opacity: 1,
     },
     playerItemBoughtOut: {
       borderLeftWidth: 4,
       backgroundColor: '#b89217', // Amber/orange color for pass
+      opacity: 1,
     },
     activeItem: {
       ...Platform.select({
@@ -346,8 +357,11 @@ export const PlayerItem = ({
     <Animated.View
       style={[
         styles.playerItem,
+        player.isActive === true && styles.playerItemActive,
         player.isAnswerCorrect === true && styles.playerItemCorrect,
-        player.isAnswerCorrect === false && styles.playerItemIncorrect,
+        player.isAnswerCorrect === false &&
+          quizState?.state !== 'BUYOUT_COMPLETE' &&
+          styles.playerItemIncorrect,
         player.isAnswerPass === true && styles.playerItemPass,
         player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}

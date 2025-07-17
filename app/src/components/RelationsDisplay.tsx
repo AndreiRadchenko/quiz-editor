@@ -48,7 +48,7 @@ const RelationItem = memo(
         <View
           style={{
             flexDirection: 'row',
-            alignItems: 'center',
+            alignItems: 'baseline',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             width: '100%',
