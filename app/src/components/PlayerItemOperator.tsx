@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Image,
   Pressable,
   Platform,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useReorderableDrag, useIsActive } from 'react-native-reorderable-list';
@@ -107,6 +109,41 @@ const createStyles = (theme: any) =>
       width: '100%',
       height: '100%',
       resizeMode: 'contain',
+    },
+    modalOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000, // Ensure it's above everything else
+    },
+    modalContent: {
+      width: '70%',
+      aspectRatio: 3 / 4,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      borderRadius: theme.borderRadius.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 4,
+        height: 6,
+      },
+      shadowOpacity: 0.5,
+      shadowRadius: 4,
+      elevation: 15,
+      overflow: 'hidden',
+    },
+    fullSizeImage: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'transparent',
     },
     infoContainer: {
       flex: 1,
@@ -272,6 +309,9 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
     drag = useReorderableDrag();
   }
 
+  // Add state for modal visibility
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+
   const player = item.player;
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -291,6 +331,11 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
 
   // Memoize styles to prevent recreation on each render
   const styles = useMemo(() => createStyles(theme), [theme]);
+  
+  // Add handler to toggle modal visibility
+  const toggleImageModal = useCallback(() => {
+    setImageModalVisible(prev => !prev);
+  }, []);
 
   // Using Animated.View for proper animations during drag
   return (
@@ -303,11 +348,39 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
         player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}
     >
+      {/* Image Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={imageModalVisible}
+        onRequestClose={toggleImageModal}
+        statusBarTranslucent={true} // This is key for Android
+        presentationStyle="overFullScreen" // This is for iOS
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={toggleImageModal}
+        >
+          <View style={styles.modalContent}>
+            <Image
+              source={playerImageSource}
+              style={styles.fullSizeImage}
+              resizeMode="contain"
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
       <Pressable style={{ flex: 1 }}>
         <View style={styles.container}>
-          <View style={styles.imageContainer}>
+          <TouchableOpacity
+            style={styles.imageContainer}
+            onPress={toggleImageModal}
+            activeOpacity={0.8}
+          >
             <Image source={playerImageSource} style={styles.playerImage} />
-          </View>
+          </TouchableOpacity>
           <View style={styles.infoContainer}>
             <View style={styles.topRow}>
               <Text style={styles.playerName}>{player.name}</Text>

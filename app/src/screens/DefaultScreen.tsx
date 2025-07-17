@@ -3,17 +3,9 @@ import React, {
   useEffect,
   useState,
   useRef,
-  RefObject,
   useMemo,
 } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import Animated, {
   LinearTransition,
   runOnJS,
@@ -32,7 +24,7 @@ import { ConnectionStatus } from '../components/ConnectionStatus';
 import { QuizHeader } from '../components/QuizHeader';
 import { useAppContext } from '../context/AppContext';
 import { SeatDataType } from '../types';
-import { PlayerItem, MemoizedPlayerItem } from '../components/PlayerItem';
+import { PlayerItem } from '../components/PlayerItem';
 import PlayerItemOperator from '../components/PlayerItemOperator';
 import { updateSeatEditorIndex } from '../api';
 import PlayerItemSkeleton from '../components/PlayerItemSkeleton';
@@ -255,9 +247,7 @@ const DefaultScreen = () => {
     [role, moveToTop, moveToBottom]
   );
 
-  // Function to generate skeleton items
   const getSkeletonData = useCallback(() => {
-    // Create 8 skeleton items (or however many you want to show while loading)
     return Array(8)
       .fill(0)
       .map((_, index) => ({
@@ -274,7 +264,6 @@ const DefaultScreen = () => {
     },
     content: {
       flex: 1,
-      // padding: theme.spacing.xs,
     },
     section: {
       flex: 1,
@@ -306,15 +295,12 @@ const DefaultScreen = () => {
       justifyContent: 'center',
     },
     scrollTopButton: {
-      bottom: -theme.spacing.xl, // Position above the ConnectionStatus
-      // right: theme.spacing['3xl'],
-      // right: 0,
+      bottom: -theme.spacing.xl,
     },
   });
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <QuizHeader
         tierLegend={quizState?.tierLegend}
         state={quizState?.state}
@@ -329,13 +315,9 @@ const DefaultScreen = () => {
         incorrectAnswers={quizState?.incorrectAnswers}
         passes={quizState?.passes}
       />
-
-      {/* Content */}
       <View style={styles.content}>
         <View style={styles.section}>
-          {/* Players content */}
           {playersLoading && isPreparing.current ? (
-            // Skeleton loader when loading
             <FlatList
               ref={listRef}
               onScroll={handleScroll}
@@ -345,7 +327,6 @@ const DefaultScreen = () => {
             />
           ) : players.length > 0 ? (
             role === 'editor' ? (
-              // true ? (
               <ReorderableList
                 ref={listRef}
                 onScroll={animatedScrollHandler} // Use the animated handler
@@ -391,8 +372,6 @@ const DefaultScreen = () => {
               {t('defaultScreen.noPlayersFound')}
             </Text>
           )}
-
-          {/* Scroll to Top Button */}
           <ScrollToTopButton
             visible={showScrollButton}
             onPress={scrollToTop}
@@ -400,8 +379,6 @@ const DefaultScreen = () => {
           />
         </View>
       </View>
-
-      {/* Connection Status at bottom */}
       <ConnectionStatus />
     </View>
   );
