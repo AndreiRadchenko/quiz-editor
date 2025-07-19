@@ -28,7 +28,7 @@
     ],
     "name": "Quiz Editor",
     "slug": "quizEditor",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/logo-square-02.png",
     "userInterfaceStyle": "dark",
@@ -58,13 +58,20 @@
           "backgroundColor": "#1a1a1a",
           "tabletImage": "./assets/splash-logo-dark.png"
         }
-      }
+      },
+      "bundleIdentifier": "com.andriiradchenko.quizEditor"
     },
     "android": {
       "adaptiveIcon": {
+        "softwareKeyboardLayoutMode": "pan",
         "foregroundImage": "./assets/logo-square-02.png",
         "backgroundColor": "#1a1a1a"
       },
+      "androidStatusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000"
+      },
+      "jsEngine": "hermes",
       "backgroundColor": "#1a1a1a",
       "splash": {
         "image": "./assets/logo-square-02.png",
@@ -77,7 +84,7 @@
         }
       },
       "package": "com.andriiradchenko.quizEditor",
-      "versionCode": 10,
+      "versionCode": 13,
       "enableProguardInReleaseBuilds": true,
       "enableSeparateBuildPerCPUArchitecture": true
     },

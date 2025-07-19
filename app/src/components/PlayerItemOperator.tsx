@@ -16,17 +16,18 @@ import { useTheme } from '../theme';
 import { SeatDataType } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { useRelations } from '../hooks/useRelations';
-import { useWebSocketContext } from '../context/WebSocketContext';
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
     playerItem: {
       flex: 1,
-      backgroundColor: theme.colors.muted,
+      backgroundColor: theme.colors.primaryHover,
       borderRadius: theme.borderRadius.md,
       padding: 0,
       marginBottom: theme.spacing.sm,
+      // A simpler approach - just use elevation for Android
       elevation: 3,
+      // For iOS, add a thin border instead of shadow to avoid styling issues
       ...Platform.select({
         ios: {
           borderWidth: 1,
@@ -36,11 +37,6 @@ const createStyles = (theme: any) =>
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: theme.colors.border,
-    },
-
-    playerItemActive: {
-      borderLeftWidth: 4,
-      backgroundColor: theme.colors.primaryHover,
     },
     playerItemCorrect: {
       borderLeftWidth: 4,
@@ -320,7 +316,6 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { serverIP } = useAppContext();
-  const { quizState } = useWebSocketContext();
 
   if (!player) return null;
 
@@ -347,11 +342,8 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
     <View
       style={[
         styles.playerItem,
-        player.isActive === true && styles.playerItemActive,
         player.isAnswerCorrect === true && styles.playerItemCorrect,
-        player.isAnswerCorrect === false &&
-          quizState?.state !== 'BUYOUT_COMPLETE' &&
-          styles.playerItemIncorrect,
+        player.isAnswerCorrect === false && styles.playerItemIncorrect,
         player.isAnswerPass === true && styles.playerItemPass,
         player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}

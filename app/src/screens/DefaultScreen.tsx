@@ -151,52 +151,6 @@ const DefaultScreen = () => {
     },
     [players, serverIP]
   );
-  //   (id: number) => {
-  //     // 1. Capture the current scroll position and find the item's index.
-  //     const currentScrollY = scrollY.value;
-  //     const playerIndex = players.findIndex(
-  //       player => Number(player.id) === Number(id)
-  //     );
-
-  //     if (playerIndex <= 0) {
-  //       return;
-  //     }
-
-  //     // 2. Determine if this is a "long-distance" move.
-  //     // If the item is more than 20 positions down, we'll use the stable "scroll to top" behavior.
-  //     const isLongDistanceMove = playerIndex > 20;
-
-  //     // 3. Update data state, which triggers the re-render and animations.
-  //     const playerToMove = players[playerIndex];
-  //     const newData = reorderItems(players, playerIndex, 0);
-  //     setPlayers(newData);
-  //     setUpdateCounter(prev => prev + 1);
-  //     updateSeatEditorIndex(playerToMove.seat, 0, serverIP);
-
-  //     // 4. After a delay for animations to settle, apply the correct scroll logic.
-  //     setTimeout(() => {
-  //       if (listRef.current) {
-  //         if (isLongDistanceMove) {
-  //           // --- STABLE BEHAVIOR FOR LONG MOVES ---
-  //           // For items moved from far away, we execute the one command we know works:
-  //           // scroll to the top. This avoids the unstable state restoration entirely.
-  //           listRef.current.scrollToOffset?.({
-  //             offset: 0,
-  //             animated: true,
-  //           });
-  //         } else {
-  //           // --- PRESERVE POSITION FOR SHORT MOVES ---
-  //           // For items already near the top, restoring the position is safe.
-  //           listRef.current.scrollToOffset?.({
-  //             offset: currentScrollY,
-  //             animated: false,
-  //           });
-  //         }
-  //       }
-  //     }, 0); // This timeout should be similar to your `animationDuration` (200ms).
-  //   },
-  //   [players, serverIP, scrollY]
-  // );
 
   const moveToBottom = useCallback(
     (id: number) => {
@@ -317,7 +271,7 @@ const DefaultScreen = () => {
       />
       <View style={styles.content}>
         <View style={styles.section}>
-          {playersLoading && isPreparing.current ? (
+          {(playersLoading && isPreparing.current) || !players.length ? (
             <FlatList
               ref={listRef}
               onScroll={handleScroll}
@@ -328,6 +282,8 @@ const DefaultScreen = () => {
           ) : players.length > 0 ? (
             role === 'editor' ? (
               <ReorderableList
+                maxToRenderPerBatch={10}
+                updateCellsBatchingPeriod={50}
                 ref={listRef}
                 onScroll={animatedScrollHandler} // Use the animated handler
                 data={players}

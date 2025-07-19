@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-import { View, Text } from 'react-native';
 import React, { JSX } from 'react';
 import { useTheme } from '../theme';
 import { useWebSocketContext } from '../context/WebSocketContext';
@@ -16,7 +14,6 @@ export const useRelations = (
   console.warn(
     'useRelations is deprecated. Use RelationsDisplay component instead'
   );
-  const { theme } = useTheme();
   const { playersQuery } = useWebSocketContext();
   const { data: playersData } = playersQuery;
 

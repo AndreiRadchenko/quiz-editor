@@ -8,6 +8,8 @@ import {
   Platform,
   Modal,
   TouchableOpacity,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useReorderableDrag } from 'react-native-reorderable-list';
@@ -134,6 +136,13 @@ const createStyles = (theme: any) =>
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 1000, // Ensure it's above everything else
+    },
+    // Add this new style specifically for Android production builds
+    androidModalFix: {
+      // Negative top margin to ensure coverage of status bar area
+      marginTop: -50, // Generous value to cover any potential status bar
+      // Extra height to compensate for the negative margin
+      height: Dimensions.get('window').height + 50,
     },
     modalContent: {
       width: '70%',
@@ -373,10 +382,20 @@ export const PlayerItem = ({
         visible={imageModalVisible}
         onRequestClose={toggleImageModal}
         statusBarTranslucent={true} // This is key for Android
+        hardwareAccelerated={true}
         presentationStyle="overFullScreen" // This is for iOS
       >
+        {/* Force status bar configuration when modal opens */}
+        <StatusBar
+          backgroundColor="transparent"
+          translucent={true}
+          barStyle="light-content"
+        />
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={[
+            styles.modalOverlay,
+            Platform.OS === 'android' && styles.androidModalFix,
+          ]}
           activeOpacity={1}
           onPress={toggleImageModal}
         >
