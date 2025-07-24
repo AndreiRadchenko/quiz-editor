@@ -1,5 +1,5 @@
 import React, { memo, useRef, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../theme';
 import { useTranslation } from 'react-i18next';
 import { SeatDataType, Role } from '../types';
@@ -13,6 +13,7 @@ interface RelationItemProps {
   description?: string;
   role: string;
   theme: any; // Theme type
+  onPress?: () => void;
 }
 
 interface RelationsDisplayProps {
@@ -20,66 +21,42 @@ interface RelationsDisplayProps {
   role: string;
   playersData?: SeatDataType[];
   isLoading: boolean;
+  scrollToPlayerByName?: (playerName: string) => void;
 }
 
 // Individual relation item - memoized
-const RelationItem = memo(
-  ({
-    playerName,
-    relationship,
-    seatNumber,
-    cameras,
-    description,
-    role,
-    theme,
-  }: RelationItemProps) => {
-    // Keep previous values to prevent flickering
-    const prevSeat = useRef(seatNumber);
+const RelationItem = ({
+  playerName,
+  relationship,
+  seatNumber,
+  cameras,
+  description,
+  role,
+  theme,
+  onPress,
+}: RelationItemProps) => {
+  // Keep previous values to prevent flickering
+  const prevSeat = useRef(seatNumber);
 
-    useEffect(() => {
-      if (seatNumber) {
-        prevSeat.current = seatNumber;
-      }
-    }, [seatNumber]);
-
-    // Display format based on role
-    if (role === 'editor' || role === 'general') {
-      return (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            width: '100%',
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: 'normal',
-              color: 'white',
-              fontSize: theme.fontSize.base,
-              width: '90%',
-            }}
-          >
-            {relationship ? `${playerName} (${relationship})` : playerName}
-          </Text>
-          <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>
-            {seatNumber || prevSeat.current || ''}
-          </Text>
-        </View>
-      );
+  useEffect(() => {
+    if (seatNumber) {
+      prevSeat.current = seatNumber;
     }
+  }, [seatNumber]);
 
-    // Admin role format
+  // Display format based on role
+  if (role === 'editor' || role === 'general') {
     return (
-      <View
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
         style={{
           flexDirection: 'row',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
           flexWrap: 'wrap',
           width: '100%',
+          paddingVertical: 3,
         }}
       >
         <Text
@@ -87,44 +64,71 @@ const RelationItem = memo(
             fontWeight: 'normal',
             color: 'white',
             fontSize: theme.fontSize.base,
-            width: 250,
+            width: '90%',
           }}
         >
           {relationship ? `${playerName} (${relationship})` : playerName}
         </Text>
-        <Text
-          style={{
-            fontWeight: 'bold',
-            fontSize: theme.fontSize.base,
-            width: 40,
-            color: '#FFD700',
-          }}
-        >
+        <Text style={{ fontWeight: 'bold', color: '#FFD700' }}>
           {seatNumber || prevSeat.current || ''}
         </Text>
-        <Text
-          style={{
-            width: 80,
-            fontSize: theme.fontSize.base,
-            fontWeight: 'normal',
-            color: theme.colors.primaryForeground,
-          }}
-        >
-          {cameras || ''}
-        </Text>
-        <Text
-          style={{
-            fontWeight: 'normal',
-            fontSize: theme.fontSize.base,
-            color: theme.colors.primaryForeground,
-          }}
-        >
-          {description || ''}
-        </Text>
-      </View>
+      </TouchableOpacity>
     );
   }
-);
+
+  // operator role format
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        flexWrap: 'wrap',
+        width: '100%',
+      }}
+    >
+      <Text
+        style={{
+          fontWeight: 'normal',
+          color: 'white',
+          fontSize: theme.fontSize.base,
+          width: 250,
+        }}
+      >
+        {relationship ? `${playerName} (${relationship})` : playerName}
+      </Text>
+      <Text
+        style={{
+          fontWeight: 'bold',
+          fontSize: theme.fontSize.base,
+          width: 40,
+          color: '#FFD700',
+        }}
+      >
+        {seatNumber || prevSeat.current || ''}
+      </Text>
+      <Text
+        style={{
+          width: 80,
+          fontSize: theme.fontSize.base,
+          fontWeight: 'normal',
+          color: theme.colors.primaryForeground,
+        }}
+      >
+        {cameras || ''}
+      </Text>
+      <Text
+        style={{
+          fontWeight: 'normal',
+          fontSize: theme.fontSize.base,
+          color: theme.colors.primaryForeground,
+        }}
+      >
+        {description || ''}
+      </Text>
+    </View>
+  );
+};
 
 // Main component
 const RelationsDisplay = ({
@@ -132,6 +136,7 @@ const RelationsDisplay = ({
   role,
   playersData,
   isLoading,
+  scrollToPlayerByName,
 }: RelationsDisplayProps) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -170,6 +175,11 @@ const RelationsDisplay = ({
             description={relationData?.description}
             role={role}
             theme={theme}
+            onPress={
+              scrollToPlayerByName
+                ? () => scrollToPlayerByName(trimmedName)
+                : undefined
+            }
           />
         );
       })}

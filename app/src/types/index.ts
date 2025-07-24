@@ -7,6 +7,7 @@ export interface AppContextType {
   setServerIP: (ip: string | null) => void;
   setLocale: (locale: 'en' | 'uk') => void;
   setRole: (role: Role) => void;
+  reloadContext: () => Promise<void>;
 }
 
 // WebSocket Broadcast States from Server

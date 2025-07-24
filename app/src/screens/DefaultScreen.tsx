@@ -26,20 +26,25 @@ import { useAppContext } from '../context/AppContext';
 import { SeatDataType } from '../types';
 import { PlayerItem } from '../components/PlayerItem';
 import PlayerItemOperator from '../components/PlayerItemOperator';
-import { updateSeatEditorIndex } from '../api';
+import { fetchQuizState, updateSeatEditorIndex } from '../api';
 import PlayerItemSkeleton from '../components/PlayerItemSkeleton';
 import ScrollToTopButton from '../components/ScrollToTopButton';
+import { queryClient } from '../store/queryClient';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 const DefaultScreen = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const { role, serverIP } = useAppContext();
-  const { quizState, playersQuery } = useWebSocketContext();
+  const { role, serverIP, reloadContext } = useAppContext();
+  const { quizState, setQuizState, playersQuery } = useWebSocketContext();
+  // const { connectWebSocket } = useWebSocket();
   const [players, setPlayers] = useState<SeatDataType[]>([]);
   const [updateCounter, setUpdateCounter] = useState(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const listRef = useRef<any>(null);
   const scrollY = useSharedValue(0);
+  const webSocketState = useWebSocket();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Use the player state hook to fetch players data
   const { data: playersData, isLoading: playersLoading } = playersQuery;
@@ -71,6 +76,51 @@ const DefaultScreen = () => {
       isPreparing.current = false; // Reset preparing state after processing
     }, 50); // Use setTimeout to ensure state update happens after current render
   }, [playersData, quizState?.state]);
+
+  const handleRefresh = useCallback(async () => {
+    // Set refreshing state to true
+    setIsRefreshing(true);
+    try {
+      // Reload AppContext
+      // if (reloadContext) {
+      //   await reloadContext();
+      // }
+
+      // // Connect WebSocket
+      // connectWebSocket();
+
+      // Fetch updated quiz state
+      console.log(`Refreshing data from server: ${serverIP}`);
+      const updatedState = await fetchQuizState(serverIP);
+
+      setQuizState(updatedState);
+      setTimeout(() => {
+        console.log('Updated quiz state:', quizState);
+      }, 0);
+      // Invalidate and refetch all queries
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['players', 'editor'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['tiers'],
+        }),
+      ]);
+      const newPlayersData = queryClient.getQueryData<SeatDataType[]>([
+        'players',
+        'editor',
+      ]);
+      if (newPlayersData) setPlayers(newPlayersData);
+
+      // Force update the component
+      setUpdateCounter(prev => prev + 1);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      // Set refreshing state back to false when done
+      setIsRefreshing(false);
+    }
+  }, [serverIP, webSocketState]);
 
   const throttledSetVisibility = useMemo(
     () =>
@@ -169,6 +219,36 @@ const DefaultScreen = () => {
     [players, serverIP]
   );
 
+  // Add this function to DefaultScreen.tsx, after your other useCallback functions
+  const scrollToPlayerByName = useCallback(
+    (playerName: string) => {
+      if (!players.length) return;
+
+      const index = players.findIndex(
+        player => player.player?.name.trim() === playerName.trim()
+      );
+
+      if (index !== -1 && listRef.current) {
+        // Handle both ReorderableList and FlatList scroll methods
+        if (typeof listRef.current.scrollToIndex === 'function') {
+          listRef.current.scrollToIndex({
+            index,
+            animated: true,
+            viewPosition: 0.3, // Position item 30% from the top
+          });
+        } else if (typeof listRef.current.scrollToOffset === 'function') {
+          // Estimate item height and calculate position
+          const itemHeight = 150; // Approximate height of player item
+          listRef.current.scrollToOffset({
+            offset: index * itemHeight,
+            animated: true,
+          });
+        }
+      }
+    },
+    [players]
+  );
+
   const renderPlayerItem = useCallback(
     ({ item }: { item: SeatDataType }) => {
       if (role === 'operator') {
@@ -187,6 +267,7 @@ const DefaultScreen = () => {
             role={role}
             moveToTop={moveToTop}
             moveToBottom={moveToBottom}
+            scrollToPlayerByName={scrollToPlayerByName}
           />
         ) : (
           <PlayerItem
@@ -194,11 +275,12 @@ const DefaultScreen = () => {
             role={role}
             moveToTop={moveToTop}
             moveToBottom={moveToBottom}
+            scrollToPlayerByName={scrollToPlayerByName}
           />
         );
       }
     },
-    [role, moveToTop, moveToBottom]
+    [role, moveToTop, moveToBottom, scrollToPlayerByName]
   );
 
   const getSkeletonData = useCallback(() => {
@@ -268,10 +350,14 @@ const DefaultScreen = () => {
         correctAnswers={quizState?.correctAnswers}
         incorrectAnswers={quizState?.incorrectAnswers}
         passes={quizState?.passes}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
       <View style={styles.content}>
         <View style={styles.section}>
-          {(playersLoading && isPreparing.current) || !players.length ? (
+          {(playersLoading && isPreparing.current) ||
+          !players.length ||
+          isRefreshing ? (
             <FlatList
               ref={listRef}
               onScroll={handleScroll}

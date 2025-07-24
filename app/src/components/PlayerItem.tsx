@@ -297,6 +297,7 @@ interface PlayerItemProps {
   role?: string;
   moveToTop?: (id: number) => void;
   moveToBottom?: (id: number) => void;
+  scrollToPlayerByName?: (playerName: string) => void;
 }
 
 export const PlayerItem = ({
@@ -304,6 +305,7 @@ export const PlayerItem = ({
   role,
   moveToTop,
   moveToBottom,
+  scrollToPlayerByName,
 }: PlayerItemProps) => {
   // Use the hook to enable dragging for reorderable list
   let drag: () => void = () => {};
@@ -501,6 +503,7 @@ export const PlayerItem = ({
                       role={role || 'general'}
                       playersData={playersQuery.data || []}
                       isLoading={playersQuery.isLoading}
+                      scrollToPlayerByName={scrollToPlayerByName}
                     />
                   </View>
                 </View>

@@ -16,12 +16,14 @@ import { useTheme } from '../theme';
 import { SeatDataType } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { useRelations } from '../hooks/useRelations';
+import { useWebSocketContext } from '../context/WebSocketContext';
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
     playerItem: {
       flex: 1,
-      backgroundColor: theme.colors.primaryHover,
+      opacity: 0.65,
+      backgroundColor: theme.colors.muted,
       borderRadius: theme.borderRadius.md,
       padding: 0,
       marginBottom: theme.spacing.sm,
@@ -37,6 +39,11 @@ const createStyles = (theme: any) =>
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: theme.colors.border,
+    },
+    playerItemActive: {
+      borderLeftWidth: 4,
+      backgroundColor: theme.colors.primaryHover,
+      opacity: 1,
     },
     playerItemCorrect: {
       borderLeftWidth: 4,
@@ -154,25 +161,26 @@ const createStyles = (theme: any) =>
       marginBottom: theme.spacing.xs,
     },
     playerName: {
-      fontSize: theme.fontSize.lg,
+      fontSize: theme.fontSize.xl,
       fontWeight: theme.fontWeight.bold,
       color: 'white',
     },
     label: {
       textAlign: 'right',
       color: 'white',
-      fontSize: theme.fontSize.base,
+      fontSize: theme.fontSize['2xl'],
       fontWeight: theme.fontWeight.semibold,
     },
     value: {
       color: '#FFD700', // Gold color for values
       fontWeight: theme.fontWeight.semibold,
-      fontSize: theme.fontSize.lg,
+      fontSize: theme.fontSize['2xl'],
     },
     valueOperator: {
       color: theme.colors.primaryForeground, // Gold color for values
-      fontWeight: theme.fontWeight.normal,
-      fontSize: theme.fontSize.lg,
+      // fontWeight: theme.fontWeight.normal,
+      fontSize: theme.fontSize['2xl'],
+      fontWeight: theme.fontWeight.semibold,
     },
     occupation: {
       color: 'white',
@@ -316,6 +324,7 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { serverIP } = useAppContext();
+  const { quizState, playersQuery } = useWebSocketContext();
 
   if (!player) return null;
 
@@ -339,11 +348,14 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
 
   // Using Animated.View for proper animations during drag
   return (
-    <View
+    <Animated.View
       style={[
         styles.playerItem,
+        player.isActive === true && styles.playerItemActive,
         player.isAnswerCorrect === true && styles.playerItemCorrect,
-        player.isAnswerCorrect === false && styles.playerItemIncorrect,
+        player.isAnswerCorrect === false &&
+          quizState?.state !== 'BUYOUT_COMPLETE' &&
+          styles.playerItemIncorrect,
         player.isAnswerPass === true && styles.playerItemPass,
         player.isAnswerBoughtOut === true && styles.playerItemBoughtOut,
       ]}
@@ -394,12 +406,24 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
                 }}
               >
                 <Text style={styles.label}>
+                  <Text style={styles.valueOperator}>{item.cameras}</Text>
+                </Text>
+                <Text style={styles.label}>
                   {t('playerItem.seatLabel')}{' '}
                   <Text style={styles.value}>{item.seat}</Text>
                 </Text>
-                <Text style={styles.label}>
-                  <Text style={styles.valueOperator}>{item.cameras}</Text>
-                </Text>
+              </View>
+            </View>
+            <View style={styles.topRow}>
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: theme.spacing.md,
+                }}
+              >
                 <Text style={styles.valueOperator}>{item.description}</Text>
               </View>
             </View>
@@ -416,7 +440,7 @@ export const PlayerItem = ({ item, role }: PlayerItemProps) => {
           </View>
         </View>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 };
 

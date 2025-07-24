@@ -1,9 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { iQuizSate, TimerStatus } from '../types';
-
+import { MaterialIcons } from '@expo/vector-icons';
 interface QuizHeaderProps {
   tierLegend?: string;
   state?: string;
@@ -17,6 +23,8 @@ interface QuizHeaderProps {
   correctAnswers?: number;
   incorrectAnswers?: number;
   passes?: number;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const QuizHeader: React.FC<QuizHeaderProps> = ({
@@ -32,9 +40,33 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
   correctAnswers,
   incorrectAnswers,
   passes,
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
+
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isRefreshing) {
+      Animated.loop(
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        })
+      ).start();
+    } else {
+      rotateAnim.stopAnimation();
+      rotateAnim.setValue(0);
+    }
+  }, [isRefreshing, rotateAnim]);
+
+  const spin = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['360deg', '0deg'],
+  });
 
   // Format timer display
   const getTimerDisplay = () => {
@@ -103,6 +135,28 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accent,
       fontFamily: 'monospace',
+    },
+    reloadButton: {
+      position: 'absolute',
+      bottom: theme.spacing.md,
+      right: theme.spacing.md,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 5,
+      display: 'flex',
+    },
+    reloadButtonRefreshing: {
+      opacity: 0.7,
+      // backgroundColor: theme.colors.accent, // Different color when refreshing
+    },
+    IconView: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      display: 'flex',
     },
   });
 
@@ -233,14 +287,26 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
             </Text>
           </View>
 
-          <View style={styles.section}>
-            {/* <Text style={styles.dataLabel}>{t('defaultScreen.correctAnswerLabel')}</Text>
-          <Text style={styles.dataValue}>
-            {correctAnswer || t('defaultScreen.unknownState')}
-          </Text> */}
-          </View>
+          <View style={styles.section}></View>
         </View>
       </View>
+      {onRefresh && (
+        <TouchableOpacity
+          style={[
+            styles.reloadButton,
+            isRefreshing && styles.reloadButtonRefreshing, // Optional: add style for when refreshing
+          ]}
+          onPress={onRefresh}
+          activeOpacity={0.7}
+          disabled={isRefreshing} // Disable button while refreshing
+        >
+          <Animated.View
+            style={[{ transform: [{ rotate: spin }] }, styles.IconView]}
+          >
+            <MaterialIcons name="cached" size={24} color="white" />
+          </Animated.View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

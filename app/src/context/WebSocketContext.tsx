@@ -41,7 +41,6 @@ export const WebSocketProvider: React.FC<{ children: ReactElement }> = ({
       const updatedState = await fetchQuizState(serverIP);
       webSocketState.setQuizState(updatedState);
     };
-
     initializeWebSocket();
     if (webSocketState.status === 'connected') {
       // WebSocket is connected, you can perform actions here

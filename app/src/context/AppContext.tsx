@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useContext,
   ReactElement,
+  useCallback,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContextType, Role } from '../types';
@@ -21,6 +22,7 @@ const defaultContextValues: AppContextType = {
   setServerIP: () => {},
   setLocale: () => {},
   setRole: () => {},
+  reloadContext: async () => Promise.resolve(),
 };
 
 export const AppContext = createContext<AppContextType>(defaultContextValues);
@@ -33,6 +35,26 @@ export const AppProvider: React.FC<{ children: ReactElement }> = ({
   const [locale, setLocaleState] = useState<'en' | 'uk'>('en');
   const [role, setRoleState] = useState<Role>('general');
   const [isLoading, setIsLoading] = useState(true);
+
+  const reloadContext = useCallback(async () => {
+    try {
+      // Reload any persisted values from storage
+      const savedRole = await AsyncStorage.getItem(ROLE_KEY);
+      if (savedRole) setRoleState(savedRole as Role);
+
+      const savedServerIP = await AsyncStorage.getItem(SERVER_IP_KEY);
+      if (savedServerIP) setServerIPState(savedServerIP);
+
+      const storedLocale = await AsyncStorage.getItem(LOCALE_KEY);
+      if (storedLocale) {
+        const parsedLocale = storedLocale as 'en' | 'uk';
+        setLocaleState(parsedLocale);
+        i18n.changeLanguage(parsedLocale);
+      }
+    } catch (error) {
+      console.error('Failed to reload app context:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const loadPersistedData = async () => {
@@ -97,6 +119,7 @@ export const AppProvider: React.FC<{ children: ReactElement }> = ({
         setServerIP: handleSetServerIP,
         setLocale: handleSetLocale,
         setRole: handleSetRole,
+        reloadContext,
       }}
     >
       {children}
