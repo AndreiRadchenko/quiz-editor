@@ -28,7 +28,7 @@
     ],
     "name": "Quiz Editor",
     "slug": "quizEditor",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/logo-square-02.png",
     "userInterfaceStyle": "dark",
@@ -84,7 +84,7 @@
         }
       },
       "package": "com.andriiradchenko.quizEditor",
-      "versionCode": 14,
+      "versionCode": 15,
       "enableProguardInReleaseBuilds": true,
       "enableSeparateBuildPerCPUArchitecture": true
     },
