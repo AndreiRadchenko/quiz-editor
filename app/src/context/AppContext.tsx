@@ -16,8 +16,8 @@ const LOCALE_KEY = 'settings.lang'; // Same as in i18n
 const ROLE_KEY = 'settings.role';
 
 const defaultContextValues: AppContextType = {
-  serverIP: null,
-  locale: 'en',
+  serverIP: '192.168.29.100',
+  locale: 'uk',
   role: 'general',
   setServerIP: () => {},
   setLocale: () => {},
@@ -31,7 +31,9 @@ export const AppContext = createContext<AppContextType>(defaultContextValues);
 export const AppProvider: React.FC<{ children: ReactElement }> = ({
   children,
 }) => {
-  const [serverIP, setServerIPState] = useState<string | null>(null);
+  const [serverIP, setServerIPState] = useState<string | null>(
+    '192.168.29.100'
+  );
   const [locale, setLocaleState] = useState<'en' | 'uk'>('en');
   const [role, setRoleState] = useState<Role>('general');
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,12 @@ export const AppProvider: React.FC<{ children: ReactElement }> = ({
       if (savedRole) setRoleState(savedRole as Role);
 
       const savedServerIP = await AsyncStorage.getItem(SERVER_IP_KEY);
-      if (savedServerIP) setServerIPState(savedServerIP);
+
+      if (savedServerIP) {
+        setServerIPState(savedServerIP);
+      } else {
+        setServerIPState('192.168.29.100');
+      }
 
       const storedLocale = await AsyncStorage.getItem(LOCALE_KEY);
       if (storedLocale) {
@@ -63,7 +70,11 @@ export const AppProvider: React.FC<{ children: ReactElement }> = ({
         const storedLocale = await AsyncStorage.getItem(LOCALE_KEY);
         const storedRole = await AsyncStorage.getItem(ROLE_KEY);
 
-        if (storedIP) setServerIPState(storedIP);
+        if (storedIP) {
+          setServerIPState(storedIP);
+        } else {
+          setServerIPState('192.168.29.100');
+        }
         if (storedLocale) {
           const parsedLocale = storedLocale as 'en' | 'uk';
           setLocaleState(parsedLocale);
