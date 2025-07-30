@@ -407,6 +407,21 @@ const DefaultScreen = () => {
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContainer}
                 itemLayoutAnimation={LinearTransition}
+                initialNumToRender={players.length}
+                windowSize={players.length}
+                maxToRenderPerBatch={players.length}
+                removeClippedSubviews={false}
+                onScrollToIndexFailed={info => {
+                  const wait = new Promise(resolve => setTimeout(resolve, 100));
+                  wait.then(() => {
+                    if (listRef.current) {
+                      listRef.current.scrollToOffset({
+                        offset: info.averageItemLength * info.index,
+                        animated: true,
+                      });
+                    }
+                  });
+                }}
               />
             )
           ) : (

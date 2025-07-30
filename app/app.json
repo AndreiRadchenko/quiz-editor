@@ -17,10 +17,7 @@
             "shrinkResources": true,
             "enableProguardInReleaseBuilds": true,
             "packagingOptions": {
-              "pickFirst": [
-                "**/libc++_shared.so",
-                "**/libjsc.so"
-              ]
+              "pickFirst": ["**/libc++_shared.so", "**/libjsc.so"]
             }
           }
         }
@@ -28,7 +25,7 @@
     ],
     "name": "Quiz Editor",
     "slug": "quizEditor",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/logo-square-02.png",
     "userInterfaceStyle": "dark",
@@ -84,7 +81,7 @@
         }
       },
       "package": "com.andriiradchenko.quizEditor",
-      "versionCode": 15,
+      "versionCode": 16,
       "enableProguardInReleaseBuilds": true,
       "enableSeparateBuildPerCPUArchitecture": true
     },
